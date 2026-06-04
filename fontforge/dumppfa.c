@@ -847,150 +847,7 @@ static void PSDumpBinaryData(void (*dumpchar)(int ch,void *data), void *data,
     }
 }
 
-static void PSDump24BinaryData(void (*dumpchar)(int ch,void *data), void *data,
-	struct _GImage *base ) {
-    struct psfilter ps;
-    int i,j,cnt,group_cnt;
-    register uint32_t val;
-    register uint32_t *pt, *end;
-    const int max_string = 65536;
-
-    if ( 3*base->width*base->height<max_string ) {
-	/* It all fits in one string. Easy peasy */
-	dumpf(dumpchar,data, "{<~" );
-	InitFilter(&ps,dumpchar,data);
-	for ( i=0; i<base->height; ++i ) {
-	    pt = (uint32_t *) (base->data + i*base->bytes_per_line);
-	    end = pt + base->width;
-	    while ( pt<end ) {
-		val = *pt++;
-		Filter(&ps,COLOR_RED(val));
-		Filter(&ps,COLOR_GREEN(val));
-		Filter(&ps,COLOR_BLUE(val));
-	    }
-	}
-	FlushFilter(&ps);
-	dumpchar('}',data);
-    } else {
-	cnt = (max_string-1)/(3*base->width);
-	if ( cnt==0 ) cnt=1;
-	group_cnt = -1;
-	for ( i=0; i<base->height; ) {
-	    if ( i+cnt>=base->height )
-		dumpf(dumpchar,data, "{currentdict /ff-image-cnt undef <~" );
-	    else {
-		dumpf(dumpchar,data, "{{/ff-image-cnt %d def <~", i/cnt );
-		group_cnt = i/cnt;
-	    }
-	    InitFilter(&ps,dumpchar,data);
-	    for ( j=0; j<cnt && i<base->height; ++i, ++j ) {
-		pt = (uint32_t *) (base->data + i*base->bytes_per_line);
-		end = pt + base->width;
-		while ( pt<end ) {
-		    val = *pt++;
-		    Filter(&ps,COLOR_RED(val));
-		    Filter(&ps,COLOR_GREEN(val));
-		    Filter(&ps,COLOR_BLUE(val));
-		}
-	    }
-	    FlushFilter(&ps);
-	    dumpf(dumpchar,data,"}\n");
-	}
-	for ( i=group_cnt-1; i>=0; --i ) {
-	    dumpf(dumpchar,data,"ff-image-cnt %d eq 3 1 roll ifelse}\n", i );
-	}
-	dumpf(dumpchar,data,"currentdict /ff-image-cnt known not 3 1 roll ifelse}\n" );
-    }
-}
-
-static void PSDrawMonoImg(void (*dumpchar)(int ch,void *data), void *data,
-	struct _GImage *base,int use_imagemask) {
-
-    dumpf(dumpchar,data, " %d %d ", base->width, base->height );
-    if ( base->trans==1 )
-	dumpf(dumpchar,data, "false ");
-    else
-	dumpf(dumpchar,data, "true ");
-    dumpf(dumpchar,data, "[%d 0 0 %d 0 %d]\n",
-	    base->width, -base->height, base->height);
-    PSDumpBinaryData(dumpchar,data,(uint8_t *) base->data,base->height,base->bytes_per_line,(base->width+7)/8);
-
-    dumpf(dumpchar,data, "%s\n",
-	    use_imagemask?"imagemask":"image" );
-}
-
-static void PSSetIndexColors(void (*dumpchar)(int ch,void *data), void *data,
-	GClut *clut) {
-    int i;
-
-    dumpf(dumpchar,data, "[/Indexed /DeviceRGB %d <\n", clut->clut_len-1 );
-    for ( i=0; i<clut->clut_len; ++i )
-	dumpf(dumpchar,data, "%02X%02X%02X%s", COLOR_RED(clut->clut[i]),
-		COLOR_GREEN(clut->clut[i]), COLOR_BLUE(clut->clut[i]),
-		i%11==10?"\n":" ");
-    dumpf(dumpchar,data,">\n] setcolorspace\n");
-}
-
-static void PSBuildImageIndexDict(void (*dumpchar)(int ch,void *data), void *data,
-	struct _GImage *base) {
-    /* I need an image dict, otherwise I am restricted to grey scale */
-    dumpf(dumpchar,data, "<<\n" );
-    dumpf(dumpchar,data, "  /ImageType 1\n" );
-    dumpf(dumpchar,data, "  /Width %d\n", base->width );
-    dumpf(dumpchar,data, "  /Height %d\n", base->height );
-    dumpf(dumpchar,data, "  /ImageMatrix [%d 0 0 %d 0 %d]\n",
-	    base->width, -base->height, base->height);
-    dumpf(dumpchar,data, "  /MultipleDataSources false\n" );
-    dumpf(dumpchar,data, "  /BitsPerComponent 8\n" );
-    dumpf(dumpchar,data, "  /Decode [0 255]\n" );
-    dumpf(dumpchar,data, "  /Interpolate false\n" );
-    dumpf(dumpchar,data, "  /DataSource " );
-    PSDumpBinaryData(dumpchar,data,base->data,base->height,base->bytes_per_line,
-	    base->width);
-    dumpf(dumpchar,data, ">> image\n" );
-}
-
-static void PSDrawImg(void (*dumpchar)(int ch,void *data), void *data,
-	struct _GImage *base) {
-
-    if ( base->image_type == it_index ) {
-	PSSetIndexColors(dumpchar,data,base->clut);
-	PSBuildImageIndexDict(dumpchar,data,base);
-	dumpf(dumpchar,data, "[/DeviceRGB] setcolorspace\n" );
-    } else {
-	dumpf(dumpchar,data, "%d %d 8 [%d 0 0 %d 0 %d] ",
-		base->width, base->height,  base->width, -base->height, base->height);
-	PSDump24BinaryData(dumpchar,data,base);
-	dumpf(dumpchar,data, "false 3 colorimage\n" );
-    }
-}
-
-static void dumpimage(void (*dumpchar)(int ch,void *data), void *data,
-	ImageList *imgl, int use_imagemask, int pdfopers,
-	int layer, int icnt, SplineChar *sc ) {
-    GImage *image = imgl->image;
-    struct _GImage *base = image->list_len==0?image->u.image:image->u.images[0];
-
-    if ( pdfopers ) {
-	dumpf( dumpchar, data, "  q 1 0 0 1 %g %g cm %g 0 0 %g 0 0 cm\n",
-		(double) imgl->xoff, (double) (imgl->yoff-imgl->yscale*base->height),
-		(double) (imgl->xscale*base->width), (double) (imgl->yscale*base->height) );
-	dumpf( dumpchar, data, "/%s_ly%d_%d_image", sc->name, layer, icnt );
-	dumpf( dumpchar, data, " Do " );	/* I think I use this for imagemasks too... */
-	dumpstr(dumpchar,data,"Q\n");
-    } else {
-	dumpf( dumpchar, data, "  gsave %g %g translate %g %g scale\n",
-		(double) imgl->xoff, (double) (imgl->yoff-imgl->yscale*base->height),
-		(double) (imgl->xscale*base->width), (double) (imgl->yscale*base->height) );
-	if ( base->image_type==it_mono ) {
-	    PSDrawMonoImg(dumpchar,data,base,use_imagemask);
-	} else {
-	    /* Just draw the image, ignore the complexity of transparent images */
-	    PSDrawImg(dumpchar,data,base);
-	}
-	dumpstr(dumpchar,data,"grestore\n");
-    }
-}
+/* GImage removed — all image PS dump functions deleted. */
 
 void SC_PSDump(void (*dumpchar)(int ch,void *data), void *data,
 	SplineChar *sc, int refs_to_splines, int pdfopers, int layer ) {
@@ -1136,13 +993,8 @@ return;
 	    if ( sc->parent->multilayer )
 		dumpstr(dumpchar,data,pdfopers ? "Q\n" : "grestore\n" );
 	}
-	if ( sc->layers[i].images!=NULL  ) { ImageList *img; int icnt=0;
-	    dumpstr(dumpchar,data,pdfopers ? "q\n" : "gsave\n" );
-	    if ( sc->layers[i].dofill )
-		dumpbrush(dumpchar,data, &sc->layers[i].fill_brush,NULL,sc,i,pdfopers);
-	    for ( img = sc->layers[i].images; img!=NULL; img=img->next, ++icnt )
-		dumpimage(dumpchar,data,img,sc->layers[i].dofill,pdfopers,i,icnt,sc);
-	    dumpstr(dumpchar,data,pdfopers ? "Q\n" : "grestore\n" );
+	if ( sc->layers[i].images!=NULL  ) {
+	    /* GImage removed — image layers are dead code, skip. */
 	}
     }
 }
@@ -1161,14 +1013,7 @@ return( true );
 return( true );
 	if ( sc->layers[l].stroke_pen.brush.gradient != NULL || sc->layers[l].stroke_pen.brush.pattern != NULL )
 return( true );
-	for ( img = sc->layers[l].images; img!=NULL; img=img->next ) {
-	    GImage *image = img->image;
-	    struct _GImage *base = image->list_len==0?image->u.image:image->u.images[0];
-	    if ( base->image_type!=it_mono )
-return( true );
-	    if ( !sc->layers[l].dofill )
-return( true );
-	}
+	/* GImage removed — images never populated, skip check. */
 	for ( r = sc->layers[l].refs; r!=NULL; r = r->next )
 	    if ( SCSetsColor(r->sc) )
 return( true );

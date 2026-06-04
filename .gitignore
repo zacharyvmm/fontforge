@@ -27,3 +27,4 @@ __pycache__
 *.py[co]
 
 build-cpp/
+rust-bindings/target/

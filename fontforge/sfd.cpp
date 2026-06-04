@@ -690,7 +690,14 @@ static void SFDDumpAnchorPoints(FILE *sfd,AnchorPoint *ap) {
 /* count 255 means that the next two bytes (bigendian) provide a two byte count */
 /* count 255 0 n (n<255) means that the previous line should be repeated n+1 times */
 /* count 255 0 255 means 255 pixels of the current color */
-static uint8_t *image2rle(struct _GImage *img, int *len) {
+/* GImage removed — image2rle deleted. */
+static uint8_t *image2rle_dummy(struct _GImage *img, int *len) {
+    (void)img; (void)len; return NULL;
+}
+
+/* placeholder for deleted image2rle code */
+#if 0
+static uint8_t *image2rle_original(struct _GImage *img, int *len) {
     int max = img->height*img->bytes_per_line;
     uint8_t *rle, *pt, *end;
     int cnt, set;
@@ -761,6 +768,8 @@ return( NULL );
     *len = pt-rle;
 return( rle );
 }
+
+#endif /* 0 — end of deleted image2rle code */
 
 void SFDDumpUndo(FILE *sfd,SplineChar *sc,Undoes *u, const char* keyPrefix, int idx ) {
     fprintf(sfd, "%sOperation\n",      keyPrefix );
@@ -853,91 +862,13 @@ void SFDDumpUndo(FILE *sfd,SplineChar *sc,Undoes *u, const char* keyPrefix, int 
     fprintf(sfd, "End%sOperation\n", keyPrefix );
 }
 
-static void SFDDumpImage(FILE *sfd,ImageList *img) {
-    GImage *image = img->image;
-    struct _GImage *base = image->list_len==0?image->u.image:image->u.images[0];
-    struct enc85 enc;
-    int rlelen;
-    uint8_t *rle;
-    int i;
-
-    rle = image2rle(base,&rlelen);
-    fprintf(sfd, "Image: %d %d %d %d %d %x %g %g %g %g %d\n",
-	    (int) base->width, (int) base->height, base->image_type,
-	    (int) (base->image_type==it_true?3*base->width:base->bytes_per_line),
-	    base->clut==NULL?0:base->clut->clut_len,(int) base->trans,
-	    (double) img->xoff, (double) img->yoff, (double) img->xscale, (double) img->yscale, rlelen );
-    memset(&enc,'\0',sizeof(enc));
-    enc.sfd = sfd;
-    if ( base->clut!=NULL ) {
-	for ( i=0; i<base->clut->clut_len; ++i ) {
-	    SFDEnc85(&enc,base->clut->clut[i]>>16);
-	    SFDEnc85(&enc,(base->clut->clut[i]>>8)&0xff);
-	    SFDEnc85(&enc,base->clut->clut[i]&0xff);
-	}
-    }
-    if ( rle!=NULL ) {
-	uint8_t *pt=rle, *end=rle+rlelen;
-	while ( pt<end )
-	    SFDEnc85(&enc,*pt++);
-	free( rle );
-    } else {
-	for ( i=0; i<base->height; ++i ) {
-	    if ( base->image_type==it_rgba ) {
-		uint32_t *ipt = (uint32_t *) (base->data + i*base->bytes_per_line);
-		uint32_t *iend = (uint32_t *) (base->data + (i+1)*base->bytes_per_line);
-		while ( ipt<iend ) {
-		    SFDEnc85(&enc,*ipt>>24);
-		    SFDEnc85(&enc,(*ipt>>16)&0xff);
-		    SFDEnc85(&enc,(*ipt>>8)&0xff);
-		    SFDEnc85(&enc,*ipt&0xff);
-		    ++ipt;
-		}
-	    } else if ( base->image_type==it_true ) {
-		int *ipt = (int *) (base->data + i*base->bytes_per_line);
-		int *iend = (int *) (base->data + (i+1)*base->bytes_per_line);
-		while ( ipt<iend ) {
-		    SFDEnc85(&enc,*ipt>>16);
-		    SFDEnc85(&enc,(*ipt>>8)&0xff);
-		    SFDEnc85(&enc,*ipt&0xff);
-		    ++ipt;
-		}
-	    } else {
-		uint8_t *pt = (uint8_t *) (base->data + i*base->bytes_per_line);
-		uint8_t *end = (uint8_t *) (base->data + (i+1)*base->bytes_per_line);
-		while ( pt<end ) {
-		    SFDEnc85(&enc,*pt);
-		    ++pt;
-		}
-	    }
-	}
-    }
-    SFDEnc85EndEnc(&enc);
-    fprintf(sfd,"\nEndImage\n" );
+/* GImage removed — SFDDumpImage and SFDDumpImagePNG are dead code
+ * (images never populated). Stubbed to no-op. */
+static void SFDDumpImage(FILE *UNUSED(sfd), ImageList *UNUSED(img)) {
 }
 
 #ifndef _NO_LIBPNG
-static void SFDDumpImagePNG(FILE *sfd,ImageList *img) {
-    struct enc85 enc = {0};
-    char* pngbuf;
-    size_t pnglen, i;
-
-    if (!GImageWritePngBuf(img->image, &pngbuf, &pnglen, 1, false)) {
-        IError("Failed to serialise PNG image");
-        return;
-    }
-
-    fprintf(sfd, "Image2: image/png %d %g %g %g %g\n",
-        (int)pnglen, (double) img->xoff, (double) img->yoff, (double) img->xscale, (double) img->yscale );
-
-    enc.sfd = sfd;
-    for (i = 0; i<pnglen; ++i) {
-        SFDEnc85(&enc, pngbuf[i]);
-    }
-    free(pngbuf);
-
-    SFDEnc85EndEnc(&enc);
-    fprintf(sfd,"\nEndImage2\n" );
+static void SFDDumpImagePNG(FILE *UNUSED(sfd), ImageList *UNUSED(img)) {
 }
 #endif
 
@@ -3454,214 +3385,28 @@ static int Dec85(struct enc85 *dec) {
 return( dec->sofar[dec->pos--] );
 }
 
-static void rle2image(struct enc85 *dec,int rlelen,struct _GImage *base) {
-    uint8_t *pt, *end;
-    int r,c,set, cnt, ch, ch2;
-    int i;
-
-    r = c = 0; set = 1; pt = base->data; end = pt + base->bytes_per_line*base->height;
-    memset(base->data,0xff,end-pt);
-    while ( rlelen>0 ) {
-	if ( pt>=end ) {
-	    IError( "RLE failure\n" );
-	    while ( rlelen>0 ) { Dec85(dec); --rlelen; }
-    break;
-	}
-	ch = Dec85(dec);
-	--rlelen;
-	if ( ch==255 ) {
-	    ch2 = Dec85(dec);
-	    cnt = (ch2<<8) + Dec85(dec);
-	    rlelen -= 2;
-	} else
-	    cnt = ch;
-	if ( ch==255 && ch2==0 && cnt<255 ) {
-	    /* Line duplication */
-	    for ( i=0; i<cnt && pt<end; ++i ) {
-		memcpy(pt,base->data+(r-1)*base->bytes_per_line,base->bytes_per_line);
-		++r;
-		pt += base->bytes_per_line;
-	    }
-	    set = 1;
-	} else {
-	    if ( pt + ((c+cnt)>>3) > end ) {
-		IError( "Run length encoded image has been corrupted.\n" );
-    break;
-	    }
-	    if ( !set ) {
-		for ( i=0; i<cnt; ++i )
-		    pt[(c+i)>>3] &= ((~0x80)>>((c+i)&7));
-	    }
-	    c += cnt;
-	    set = 1-set;
-	    if ( c>=base->width ) {
-		++r;
-		pt += base->bytes_per_line;
-		c = 0; set = 1;
-	    }
-	}
-    }
-}
+/* GImage removed — SFD image read stubs: parse and discard image blocks. */
 
 #ifndef _NO_LIBPNG
-
-enum MIME { UNKNOWN, PNG }; // We only understand PNG for now.
-
-static enum MIME SFDGetImage2MIME(FILE *sfd) {
-    char mime[128];
-
-    if ( !getname(sfd, mime) ) {
-        IError("Failed to get a MIME type, file corrupt");
-        return UNKNOWN;
-    }
-
-    if ( !(strmatch(mime, "image/png")==0) ) {
-        IError("MIME type received—%s—is not recognized", mime);
-        return UNKNOWN;
-    }
-
-    return PNG;
-}
-
 static ImageList *SFDGetImagePNG(FILE *sfd) {
+    /* GImage removed — skip PNG image data by consuming header and ignoring payload */
     int pnglen;
-    ImageList *img;
-    struct enc85 dec = {0};
-    int i, ch;
-
-    img = (ImageList *)calloc(1,sizeof(ImageList));
-    dec.pos = -1;
-    dec.sfd = sfd;
-
     getint(sfd,&pnglen);
-    getreal(sfd,&img->xoff);
-    getreal(sfd,&img->yoff);
-    getreal(sfd,&img->xscale);
-    getreal(sfd,&img->yscale);
-
-    while ( (ch=nlgetc(sfd))==' ' || ch=='\t' )
-        /* skip */;
-
-    char* pngbuf = (char *)malloc(pnglen * sizeof(char));
-    if (pngbuf == NULL) {
-        IError("Failed to allocate buffer to read PNG in SFD file");
-        return NULL;
+    /* consume the remaining header fields and data until EndImage2 */
+    {
+        const char* im2_terminator[] = { "EndImage2", 0 };
+        SFDConsumeUntil(sfd, im2_terminator);
     }
-
-    for (i = 0; i<pnglen; ++i) {
-        pngbuf[i] = Dec85(&dec);
-    }
-
-    img->image = GImageReadPngBuf(pngbuf, pnglen);
-    free(pngbuf);
-
-    if (img->image == NULL) {
-        IError("Failed to read PNG in SFD file, skipping it.");
-        free(img);
-        return NULL;
-    }
-
-    img->bb.minx = img->xoff; img->bb.maxy = img->yoff;
-    img->bb.maxx = img->xoff + GImageGetWidth(img->image)*img->xscale;
-    img->bb.miny = img->yoff - GImageGetHeight(img->image)*img->yscale;
-    return img;
+    return NULL;
 }
 #endif
 
 static ImageList *SFDGetImage(FILE *sfd) {
-    /* We've read the image token */
-    int width, height, image_type, bpl, clutlen, rlelen;
-    uint32_t trans;
-    struct _GImage *base;
-    GImage *image;
-    ImageList *img;
-    struct enc85 dec;
-    int i, ch;
-
-    memset(&dec,'\0', sizeof(dec)); dec.pos = -1;
-    dec.sfd = sfd;
-
-    getint(sfd,&width);
-    getint(sfd,&height);
-    getint(sfd,&image_type);
-    getint(sfd,&bpl);
-    getint(sfd,&clutlen);
-    if ( clutlen < 0 || clutlen > 256 ) {
-        LogError(_("Invalid clut length %d in sfd file, must be between 0 and 256"), clutlen);
-        return NULL;
-    }
-    gethex(sfd,&trans);
-    image = GImageCreate((enum image_type)image_type,width,height);
-    base = image->list_len==0?image->u.image:image->u.images[0];
-    img = (ImageList *)calloc(1,sizeof(ImageList));
-    img->image = image;
-    getreal(sfd,&img->xoff);
-    getreal(sfd,&img->yoff);
-    getreal(sfd,&img->xscale);
-    getreal(sfd,&img->yscale);
-    while ( (ch=nlgetc(sfd))==' ' || ch=='\t' );
-    ungetc(ch,sfd);
-    rlelen = 0;
-    if ( isdigit(ch))
-	getint(sfd,&rlelen);
-    base->trans = trans;
-    if ( clutlen!=0 ) {
-	if ( base->clut==NULL )
-	    base->clut = (GClut *)calloc(1,sizeof(GClut));
-	base->clut->clut_len = clutlen;
-	base->clut->trans_index = trans;
-	for ( i=0;i<clutlen; ++i ) {
-	    int r,g,b;
-	    r = Dec85(&dec);
-	    g = Dec85(&dec);
-	    b = Dec85(&dec);
-	    base->clut->clut[i] = (r<<16)|(g<<8)|b;
-	}
-    }
-    if ( rlelen!=0 ) {
-	rle2image(&dec,rlelen,base);
-    } else {
-	for ( i=0; i<height; ++i ) {
-	    if ( image_type==it_rgba ) {
-		uint32_t *ipt = (uint32_t *) (base->data + i*base->bytes_per_line);
-		uint32_t *iend = (uint32_t *) (base->data + (i+1)*base->bytes_per_line);
-		int r,g,b, a;
-		while ( ipt<iend ) {
-		    a = Dec85(&dec);
-		    r = Dec85(&dec);
-		    g = Dec85(&dec);
-		    b = Dec85(&dec);
-		    *ipt++ = (a<<24)|(r<<16)|(g<<8)|b;
-		}
-	    } else if ( image_type==it_true ) {
-		int *ipt = (int *) (base->data + i*base->bytes_per_line);
-		int *iend = (int *) (base->data + (i+1)*base->bytes_per_line);
-		int r,g,b;
-		while ( ipt<iend ) {
-		    r = Dec85(&dec);
-		    g = Dec85(&dec);
-		    b = Dec85(&dec);
-		    *ipt++ = (r<<16)|(g<<8)|b;
-		}
-	    } else {
-		uint8_t *pt = (uint8_t *) (base->data + i*base->bytes_per_line);
-		uint8_t *end = (uint8_t *) (base->data + (i+1)*base->bytes_per_line);
-		while ( pt<end ) {
-		    *pt++ = Dec85(&dec);
-		}
-	    }
-	}
-    }
-    img->bb.minx = img->xoff; img->bb.maxy = img->yoff;
-    img->bb.maxx = img->xoff + GImageGetWidth(img->image)*img->xscale;
-    img->bb.miny = img->yoff - GImageGetHeight(img->image)*img->yscale;
-    /* In old sfd files I failed to recognize bitmap pngs as bitmap, so put */
-    /*  in a little check here that converts things which should be bitmap to */
-    /*  bitmap */ /* Eventually it can be removed as all old sfd files get */
-    /*  converted. 22/10/2002 */
-    if ( base->image_type==it_index && base->clut!=NULL && base->clut->clut_len==2 )
-	/* img->image = ImageAlterClut(img->image); — background image clut conversion removed */
-return( img );
+    /* GImage removed — skip legacy image data */
+    /* Consume everything until EndImage */
+    const char* im_terminator[] = { "EndImage", 0 };
+    SFDConsumeUntil(sfd, im_terminator);
+    return NULL;
 }
 
 static void SFDGetType1(FILE *sfd) {
@@ -4204,23 +3949,15 @@ Undoes *SFDGetUndo( FILE *sfd, SplineChar *sc,
 	    if( !strmatch(tok,"Image2:"))
 	    {
 #ifndef _NO_LIBPNG
-		enum MIME mime = SFDGetImage2MIME(sfd);
-		if (mime == PNG) {
-		    ImageList *img = SFDGetImagePNG(sfd);
-		    if (img != NULL) {
-			if ( !u->u.state.images )
-			    u->u.state.images = img;
-			else
-			    lasti->next = img;
-			lasti = img;
-		    }
-		} else 
-#endif
+		/* GImage removed — skip Image2 data */
+		SFDGetImagePNG(sfd);
+#else
 	    {
 		LogError(_("Image2 skipped as it uses an unsupported image type"));
 		const char* im2_terminator[] = { "EndImage2", 0 };
 		SFDConsumeUntil(sfd, im2_terminator);
 	    }
+#endif
 	    }
 
 	    if( !strmatch(tok,"Comment:")) {
@@ -5617,25 +5354,15 @@ return( NULL );
 	    }
 	} else if ( strmatch(tok,"Image2:")==0 ) {
 #ifndef _NO_LIBPNG
-	    enum MIME mime = SFDGetImage2MIME(sfd);
-	    if (mime == PNG) {
-		int ly = current_layer;
-		if ( !multilayer && !sc->layers[ly].background ) ly = ly_back;
-		img = SFDGetImagePNG(sfd);
-		if (img != NULL) {
-		    if ( sc->layers[ly].images==NULL )
-			sc->layers[ly].images = img;
-		    else
-			lasti->next = img;
-		    lasti = img;
-		}
-	    } else
-#endif
+	    /* GImage removed — skip Image2 data */
+	    SFDGetImagePNG(sfd);
+#else
 	    {
 	    LogError(_("Image2 skipped as it uses an unsupported image type"));
 	    const char* im2_terminator[] = { "EndImage2", 0 };
 	    SFDConsumeUntil(sfd, im2_terminator);
 	    }
+#endif
 	} else if ( strmatch(tok,"PickledData:")==0 ) {
 	    if (current_layer < sc->layer_cnt) {
 	      sc->layers[current_layer].python_persistent = SFDUnPickle(sfd, 0);

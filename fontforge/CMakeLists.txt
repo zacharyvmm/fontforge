@@ -56,7 +56,6 @@ set(FONTFORGE_INST_HEADERS
   autowidth2.h
   baseviews.h
   bezctx_ff.h
-  delta.h
   edgelist.h
   edgelist2.h
   encoding.h

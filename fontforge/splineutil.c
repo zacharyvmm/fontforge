@@ -1703,26 +1703,18 @@ return( head );
 ImageList *ImageListTransform(ImageList *img, real transform[6],int everything) {
     ImageList *head = img;
 
-	/* Don't support rotating, flipping or skewing images */;
+    /* GImage removed — images never populated. Transform positions only. */
     if ( transform[0]!=0 && transform[3]!=0 ) {
 	while ( img!=NULL ) {
 	    if ( everything || (!everything && img->selected)) {
 		bigreal x = img->xoff;
 		img->xoff = transform[0]*x + transform[2]*img->yoff + transform[4];
 		img->yoff = transform[1]*x + transform[3]*img->yoff + transform[5];
-		if (( img->xscale *= transform[0])<0 ) {
-		    img->xoff += img->xscale *
-			(img->image->list_len==0?img->image->u.image:img->image->u.images[0])->width;
-		    img->xscale = -img->xscale;
-		}
-		if (( img->yscale *= transform[3])<0 ) {
-		    img->yoff += img->yscale *
-			(img->image->list_len==0?img->image->u.image:img->image->u.images[0])->height;
-		    img->yscale = -img->yscale;
-		}
+		img->xscale *= transform[0];
+		img->yscale *= transform[3];
 		img->bb.minx = img->xoff; img->bb.maxy = img->yoff;
-		img->bb.maxx = img->xoff + GImageGetWidth(img->image)*img->xscale;
-		img->bb.miny = img->yoff - GImageGetHeight(img->image)*img->yscale;
+		img->bb.maxx = img->xoff;
+		img->bb.miny = img->yoff;
 	    }
 	    img = img->next;
 	}

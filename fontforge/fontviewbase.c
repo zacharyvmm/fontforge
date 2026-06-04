@@ -141,19 +141,9 @@ void VrTrans(struct vr *vr,real transform[6]) {
     vr->v_adv_off = rint(transform[2]*x + transform[3]*y);
 }
 
-void BackgroundImageTransform(SplineChar *sc, ImageList *img,real transform[6]) {
-    if ( transform[1]==0 && transform[2]==0 && transform[0]>0 && transform[3]>0 ) {
-	img->xoff = transform[0]*img->xoff + transform[4];
-	img->yoff = transform[3]*img->yoff + transform[5];
-	if (( img->xscale *= transform[0])<0 ) img->xscale = -img->xscale;
-	if (( img->yscale *= transform[3])<0 ) img->yscale = -img->yscale;
-	img->bb.minx = img->xoff; img->bb.maxy = img->yoff;
-	img->bb.maxx = img->xoff + GImageGetWidth(img->image)*img->xscale;
-	img->bb.miny = img->yoff - GImageGetHeight(img->image)*img->yscale;
-    } else {
-	/* Don't support rotating, flipping or skewing images */
-	;
-    }
+void BackgroundImageTransform(SplineChar *UNUSED(sc), ImageList *img, real transform[6]) {
+    /* GImage removed — images never populated. Simplified to no-op. */
+    (void)img; (void)transform;
 }
 
 static void GV_Trans(struct glyphvariants *gv,real transform[6], int is_v) {
