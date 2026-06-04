@@ -31,10 +31,9 @@
 #include "autohint.h"
 #include "autowidth.h"
 #include "bitmapchar.h"
-#include "bvedit.h"
-#include "cvundoes.h"
 #include "encoding.h"
 #include "fontforgevw.h"
+#include "formatstubs.h"
 #include "fvfonts.h"
 #include "namelist.h"
 #include "splinefill.h"
@@ -1650,7 +1649,6 @@ static void BCClearAndCopyBelow(BDFFont *bdf,int togid,int fromgid, int ymax) {
     BDFChar *bc, *rbc;
 
     bc = BDFMakeGID(bdf,togid);
-    BCPreserveState(bc);
     BCFlattenFloat(bc);
     BCCompressBitmap(bc);
     if ( bdf->glyphs[fromgid]!=NULL ) {
@@ -2353,7 +2351,6 @@ static void BCMakeSpace(BDFFont *bdf, int gid, int width, int em) {
     if ( (bc = bdf->glyphs[gid])==NULL ) {
 	BDFMakeGID( bdf,gid );
     } else {
-	BCPreserveState(bc);
 	BCFlattenFloat(bc);
 	BCCompressBitmap(bc);
 	free(bc->bitmap);
@@ -2448,7 +2445,6 @@ static void BCMakeRule(BDFFont *bdf, int gid, int layer) {
     if ( (bc = bdf->glyphs[gid])==NULL ) {
 	BDFMakeGID(bdf,gid);
     } else {
-	BCPreserveState(bc);
 	BCFlattenFloat(bc);
 	BCCompressBitmap(bc);
 	free(bc->bitmap);
@@ -2729,7 +2725,6 @@ return( true );
     if ( head==NULL )
 return( false );
 
-    SCPreserveLayer(dotless,layer,true);
     SplinePointListsFree(dotless->layers[layer].splines);
     dotless->layers[layer].splines = NULL;
     SCRemoveLayerDependents(dotless,layer);
@@ -2820,7 +2815,6 @@ void SCBuildComposit(SplineFont *sf, SplineChar *sc, int layer, BDFFont *bdf, in
     if ( !SFIsSomethingBuildable(sf,sc,layer,false))
 return;
     if ( !disp_only || bdf == NULL ) {
-	SCPreserveLayer(sc,layer,true);
 	SplinePointListsFree(sc->layers[layer].splines);
 	sc->layers[layer].splines = NULL;
 	SCRemoveLayerDependents(sc,layer);
@@ -2932,7 +2926,6 @@ return( 1 );				/* No base character reference found */
 	ia = SFGuessItalicAngle(sf);
     ia *= FF_PI/180;	/* convert degrees to radians */
 
-    SCPreserveLayer(sc,layer,true);
 
     asc = SFGetChar(sf,uni,glyph_name);
     if ( asc!=NULL && uni==-1 )

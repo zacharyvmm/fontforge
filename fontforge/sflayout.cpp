@@ -28,13 +28,12 @@
 
 #include <fontforge-config.h>
 
-#include "bvedit.h"
 #include "encoding.h"
 #include "ffglib_compat.h"
+#include "formatstubs.h"
 #include "fontforgevw.h"
 #include "fvfonts.h"
 #include "lookups.h"
-#include "scripting.h"
 #include "sflayoutP.h"
 #include "splinefill.h"
 #include "splineorder2.h"
@@ -1098,6 +1097,7 @@ return( head );
 }
 
 
+#ifndef _NO_FFSCRIPT
 static Array *SFDefaultScriptsLines(Array *arr,SplineFont *sf) {
     int pixelsize=24;
     uint32_t scripts[200], script;
@@ -1221,7 +1221,9 @@ static Array *SFDefaultScriptsLines(Array *arr,SplineFont *sf) {
       ret->vals[0].u.ival = 3*pixelsize/2;	/* Use as a title, make bigger */
 return( ret );
 }
+#endif /* !_NO_FFSCRIPT */
 
+#ifndef _NO_FFSCRIPT
 void FontImage(SplineFont *sf,char *filename,Array *arr,int width,int height) {
     LayoutInfo *li = (LayoutInfo *)calloc(1,sizeof(LayoutInfo));
     int cnt, len, i,j, ret, p, x;
@@ -1336,8 +1338,14 @@ void FontImage(SplineFont *sf,char *filename,Array *arr,int width,int height) {
     if ( freeme!=NULL )
 	arrayfree(freeme);
 }
+#endif /* !_NO_FFSCRIPT */
 
 char *SFDefaultImage(SplineFont *sf,char *filename) {
+#ifdef _NO_FFSCRIPT
+    (void)sf; (void)filename;
+    /* FontImage requires scripting (Array type). Return NULL in headless builds. */
+    return NULL;
+#else
 
     if ( filename==NULL ) {
 	static int cnt=0;
@@ -1351,6 +1359,7 @@ char *SFDefaultImage(SplineFont *sf,char *filename) {
     }
     FontImage(sf,filename,NULL,-1,-1);
 return( filename );
+#endif /* _NO_FFSCRIPT */
 }
 
 void LayoutInfoSetTitle(LayoutInfo *li,const unichar_t *tit,int width) {

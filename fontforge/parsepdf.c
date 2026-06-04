@@ -30,12 +30,11 @@
 
 #include "parsepdf.h"
 
-#include "cvimages.h"
 #include "dumppfa.h"
+#include "formatstubs.h"
 #include "encoding.h"
 #include "fontforge.h"
 #include "gfile.h"
-#include "gwidget.h"
 #include "namelist.h"
 #include "parsepfa.h"
 #include "parsettf.h"

@@ -30,9 +30,9 @@
 #include "encoding.h"
 
 #include "bitmapchar.h"
-#include "bvedit.h"
 #include "dumppfa.h"
 #include "encoding.h"
+#include "formatstubs.h"
 #include "ffglib_compat.h"
 #include "fontforgevw.h"
 #include "fvfonts.h"

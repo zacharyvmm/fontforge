@@ -28,10 +28,9 @@
 #include <fontforge-config.h>
 
 #include "autohint.h"
-#include "cvimages.h"
 #include "ffglib_compat.h"
-#include "cvundoes.h"
 #include "fontforge.h"
+#include "formatstubs.h"
 #include "namelist.h"
 #include "psfont.h"
 #include "sd.h"

@@ -31,7 +31,6 @@
 #include "autowidth.h"
 
 #include "autohint.h"
-#include "cvundoes.h"
 #include "fontforgevw.h"
 #include "fvfonts.h"
 #include "lookups.h"
@@ -210,7 +209,6 @@ static void ApplyChanges(WidthInfo *wi) {
 	SplineCharLayerFindBounds(ch->sc,wi->layer,&bb);
 	width = rint(bb.maxx + ch->newr);
 	if ( width!=ch->sc->width ) {
-	    SCPreserveWidth(ch->sc);
 	    SCSynchronizeWidth(ch->sc,width,ch->sc->width,wi->fv);
 	    SCCharChangedUpdate(ch->sc,ly_none);
 	}

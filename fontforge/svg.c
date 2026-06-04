@@ -30,8 +30,8 @@
 #include "svg.h"
 
 #include "autohint.h"
-#include "cvimages.h"
 #include "dumppfa.h"
+#include "formatstubs.h"
 #include "encoding.h"
 #include "ffglib_compat.h"
 #include "fontforgevw.h"

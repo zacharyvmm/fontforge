@@ -33,10 +33,6 @@
 #include "gfile.h"
 #include "ustring.h"
 
-#ifdef HAVE_GLIB
-#include "ffglib.h"
-#endif
-
 #include <errno.h>			/* for mkdir_p */
 #include <fcntl.h>
 #include <stdio.h>
@@ -745,21 +741,16 @@ const char *getLocaleDir(void) {
 }
 
 const char *getPixmapDir(void) {
+    /* Pixmaps are only used by the GUI, which has been removed. */
     static char *pixmapdir=NULL;
     if (!pixmapdir) {
-	if (devel_env) {
-            /* GUI_THEME macro is imported from the CMake ${GUI_THEME} variable */
-            char *theme_src = smprintf("%s/../fontforgeexe/pixmaps/%s", program_root, GUI_THEME);
-            pixmapdir = GFileGetAbsoluteName(theme_src);
-            free(theme_src);
-	} else {
-            pixmapdir = smprintf("%s/pixmaps", getShareDir());
-	}
+        pixmapdir = smprintf("%s/pixmaps", getShareDir());
     }
     return pixmapdir;
 }
 
 const char *getHelpDir(void) {
+    /* Help is only used by the GUI, which has been removed. */
     static char *helpdir=NULL;
     if (!helpdir) {
         helpdir = smprintf("%s/share/doc/fontforge/", program_root);

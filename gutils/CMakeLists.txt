@@ -25,7 +25,6 @@ add_library(gutils OBJECT
   gimagewritexpm.cpp
   gutils.cpp
   gwwintl.cpp
-  prefs.c
 )
 
 if(BUILD_SHARED_LIBS)

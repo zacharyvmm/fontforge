@@ -30,25 +30,21 @@
 #include "fvimportbdf.h"
 
 #include "bitmapchar.h"
-#include "bvedit.h"
-#include "cvimages.h"
 #include "encoding.h"
+#include "formatstubs.h"
 #include "ffglib_compat.h"
 #include "ffprocess.h"
 #include "fontforgevw.h"
 #include "fvfonts.h"
 #include "gfile.h"
-#include "macbinary.h"
 #include "mem.h"
 #include "namelist.h"
-#include "palmfonts.h"
 #include "parsettf.h"
 #include "splinefill.h"
 #include "splineutil.h"
 #include "splineutil2.h"
 #include "ustring.h"
 #include "utype.h"
-#include "winfonts.h"
 
 #include <math.h>
 #include "ffunistd.h"
@@ -2360,7 +2356,8 @@ static void SFAddToBackground(SplineFont *sf,BDFFont *bdf) {
 	    img = calloc(1,sizeof(GImage));
 	    img->u.image = base;
 
-	    SCInsertImage(sc,img,scale,yoff+(bdfc->ymax+1)*scale,bdfc->xmin*scale,ly_back);
+	    /* SCInsertImage(sc,img,scale,yoff+(bdfc->ymax+1)*scale,bdfc->xmin*scale,ly_back); — background image insertion removed */
+	    GImageDestroy(img);
 	}
     }
     BDFFontFree(bdf);

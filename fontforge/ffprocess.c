@@ -31,10 +31,6 @@
 #include <strings.h> /* for strcasecmp on POSIX */
 #endif
 
-#ifndef _NO_PYTHON
-#include <Python.h>
-#endif
-
 /* POSIX headers */
 #if defined(__unix__) || defined(__APPLE__)
 #define HAVE_POSIX 1

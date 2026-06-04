@@ -30,15 +30,13 @@
 #include "savefont.h"
 
 #include "autohint.h"
-#include "cvundoes.h"
 #include "dumpbdf.h"
+#include "formatstubs.h"
 #include "dumppfa.h"
 #include "fontforgevw.h"
 #include "fvfonts.h"
 #include "gfile.h"
-#include "macbinary.h"
 #include "namelist.h"
-#include "palmfonts.h"
 #include "psfont.h"
 #include "splinefill.h"
 #include "splineoverlap.h"
@@ -48,7 +46,6 @@
 #include "tottf.h"
 #include "ustring.h"
 #include "utype.h"
-#include "winfonts.h"
 #include "woff.h"
 
 #include <math.h>
@@ -969,13 +966,11 @@ void PrepareUnlinkRmOvrlp(SplineFont *sf,const char *filename,int layer) {
     int gid;
     SplineChar *sc;
     RefChar *ref, *refnext;
-    int old_nwui = no_windowing_ui, old_maxundoes = maxundoes;
+    int old_nwui = no_windowing_ui;
 
 #if !defined(_NO_PYTHON)
     PyFF_CallDictFunc(sf->python_temporary,"generateFontPreHook","fs",sf->fv,filename);
 #endif
-
-    if ( maxundoes==0 ) maxundoes = 1;		/* Force undoes */
 
     for ( gid=0; gid<sf->glyphcnt; ++gid ) if ( (sc=sf->glyphs[gid])!=NULL && sc->unlink_rm_ovrlp_save_undo ) {
 	if ( autohint_before_generate && sc!=NULL &&
@@ -984,7 +979,6 @@ void PrepareUnlinkRmOvrlp(SplineFont *sf,const char *filename,int layer) {
 	    SplineCharAutoHint(sc,layer,NULL);	/* Do this now, else we get an unwanted undo on the stack from hinting */
 	}
 	no_windowing_ui = false;
-	SCPreserveLayer(sc,layer,false);
 	no_windowing_ui = true;			/* Clustering wants to create an undo that I don't need */
 	for ( ref= sc->layers[layer].refs; ref!=NULL; ref=refnext ) {
 	    refnext = ref->next;
@@ -1000,7 +994,6 @@ void PrepareUnlinkRmOvrlp(SplineFont *sf,const char *filename,int layer) {
 	    sc->changedsincelasthinted = false;
     }
     no_windowing_ui = old_nwui;
-    maxundoes = old_maxundoes;
 }
 
 void RestoreUnlinkRmOvrlp(SplineFont *sf,const char *filename,int layer) {
@@ -1008,7 +1001,6 @@ void RestoreUnlinkRmOvrlp(SplineFont *sf,const char *filename,int layer) {
     SplineChar *sc;
 
     for ( gid=0; gid<sf->glyphcnt; ++gid ) if ( (sc=sf->glyphs[gid])!=NULL && sc->unlink_rm_ovrlp_save_undo ) {
-	SCDoUndo(sc,layer);
 	if ( !sc->manualhints )
 	    sc->changedsincelasthinted = false;
     }

@@ -3,47 +3,30 @@
 set(FONTFORGE_NOINST_HEADERS
   asmfpst.h
   autohint.h
-  autosave.h
-  autotrace.h
   autowidth.h
   autowidth2.h
   bitmapchar.h
-  bitmapcontrol.h
-  bvedit.h
-  clipnoui.h
   crctab.h
-  cvexport.h
-  cvimages.h
-  cvundoes.h
   dumpbdf.h
   dumppfa.h
-  effects.h
   encoding.h
   featurefile.h
-  fontforgeui.h
   fvcomposite.h
   fvfonts.h
   fvimportbdf.h
-  ikarus.h
-  langfreq.h
-  macbinary.h
   macenc.h
-  mathconstants.h
   multidialog.h
   namelist.h
   othersubrs.h
-  palmfonts.h
   parsepdf.h
   parsepfa.h
   parsettf.h
   parsettfatt.h
   parsettfbmf.h
   parsettfvar.h
-  plugin.h
   psread.h
   pua.h
   savefont.h
-  scstyles.h
   sfd.h
   spiro.h
   splinefill.h
@@ -65,9 +48,7 @@ set(FONTFORGE_NOINST_HEADERS
   tottfvar.h
   ttfspecial.h
   utanvec.h
-  winfonts.h
   woff.h
-  zapfnomen.h
 )
 
 set(FONTFORGE_INST_HEADERS
@@ -75,35 +56,26 @@ set(FONTFORGE_INST_HEADERS
   autowidth2.h
   baseviews.h
   bezctx_ff.h
-  bitmapcontrol.h
   delta.h
   edgelist.h
   edgelist2.h
   encoding.h
   fffreetype.h
-  ffpython.h
   flaglist.h
   fontforge.h
   fontforgevw.h
   fvmetrics.h
   getline.h
   glif_name_hash.h
-  glyphcomp.h
   groups.h
   lookups.h
   mem.h
   mm.h
   namehash.h
-  nonlineartrans.h
-  ofl.h
   PfEd.h
-  print.h
   psfont.h
   savefont.h
-  scriptfuncs.h
-  scripting.h
   sd.h
-  search.h
   sfd1.h
   sflayoutP.h
   splinefont.h
@@ -112,78 +84,52 @@ set(FONTFORGE_INST_HEADERS
   ttfinstrs.h
   uiinterface.h
   unicoderange.h
-  views.h
 )
 
 add_library(fontforge
   ${FONTFORGE_NOINST_HEADERS}
   ${FONTFORGE_INST_HEADERS}
-  activeinui.c
   ffglib_compat.cpp
   asmfpst.c
   autohint.c
-  autosave.c
-  autotrace.c
   autowidth.c
   autowidth2.c
   bezctx_ff.c
   bitmapchar.c
-  bitmapcontrol.c
-  bvedit.c
-  clipnoui.c
   crctab.cpp
-  cvexport.c
-  cvimages.c
-  cvundoes.c
   dumpbdf.c
   dumppfa.c
-  effects.c
   encoding.c
   featurefile.c
   ffprocess.c
   flaglist.c
+  formatstubs.c
   fontviewbase.c
   freetype.c
-  ftdelta.c
   fvcomposite.c
   fvfonts.c
   fvimportbdf.c
   fvmetrics.c
   getline.c
   glif_name_hash.cpp
-  glyphcomp.c
   groups.c
-  ikarus.c
-  langfreq.c
   lookups.c
-  macbinary.c
   macenc.c
-  mathconstants.c
   mem.c
   mm.c
   namelist.c
-  nonlineartrans.c
   noprefs.c
   nouiutil.c
-  nowakowskittfinstr.c
-  ofl.c
   othersubrs.c
-  palmfonts.c
   parsepdf.c
   parsepfa.c
   parsettf.c
   parsettfatt.c
   parsettfbmf.c
   parsettfvar.c
-  plugin.cpp
-  print.cpp
   psread.c
   pua.c
-  python.cpp
   savefont.c
-  scripting.cpp
-  scstyles.c
-  search.c
   sfd.cpp
   sfd1.c
   sflayout.cpp
@@ -213,9 +159,7 @@ add_library(fontforge
   ufo.c
   unicoderange.c
   utanvec.c
-  winfonts.c
   woff.c
-  zapfnomen.c
 )
 
 add_subdirectory(shapers)
@@ -275,24 +219,6 @@ endif()
 if(ENABLE_LIBREADLINE_RESULT)
   target_link_libraries(fontforge PUBLIC Readline::Readline)
 endif()
-if(ENABLE_PYTHON_SCRIPTING_RESULT)
-  if(APPLE)
-    # On macOS, don't link libfontforge directly to Python library.
-    # The Python symbols should be resolved at runtime from the interpreter
-    # that loads the extension module. Use -undefined dynamic_lookup to allow
-    # undefined symbols that will be resolved when the extension is loaded.
-    target_include_directories(fontforge PRIVATE ${Python3_INCLUDE_DIRS})
-    target_link_options(fontforge PRIVATE -undefined dynamic_lookup)
-  else()
-    if(TARGET Python3::Python)
-      target_link_libraries(fontforge PRIVATE Python3::Python)
-    elseif(TARGET Python3::Module)
-      target_link_libraries(fontforge PRIVATE Python3::Module)
-    else()
-      message(FATAL_ERROR "Python3 imported target not found")
-    endif()
-  endif()
-endif()
 if(ENABLE_WOFF2_RESULT)
   target_link_libraries(fontforge PRIVATE WOFF2::WOFF2)
 endif()
@@ -308,13 +234,7 @@ endif()
 
 # No dev package -> no need to install if static
 if(BUILD_SHARED_LIBS)
-  if(BUILDING_WHEEL)
-    # Wheel: install alongside Python modules for bundling
-    install(TARGETS fontforge
-      RUNTIME DESTINATION "."
-      LIBRARY DESTINATION "."
-    )
-  elseif(WIN32 OR CYGWIN)
+  if(WIN32 OR CYGWIN)
     install(TARGETS fontforge RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
   else()
     install(TARGETS fontforge RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

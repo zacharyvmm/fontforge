@@ -32,12 +32,12 @@
 #include "autohint.h"
 #include "featurefile.h"
 #include "fontforgevw.h"		/* For Error */
+#include "formatstubs.h"
 #include "gfile.h"
 #include "fvcomposite.h"
 #include "fvfonts.h"
 #include "gutils.h"
 #include "lookups.h"
-#include "macbinary.h"
 #include "mem.h"
 #include "mm.h"
 #include "namelist.h"
@@ -49,7 +49,12 @@
 #include "ttf.h"		/* For AnchorClassDecompose */
 #include "ustring.h"
 #include "utype.h"
-#include "zapfnomen.h"
+
+/* Stubbed zapf dingbats arrays (was in zapfnomen.h) */
+extern char *zapfnomen[];
+extern short zapfwx[];
+extern short zapfbb[][4];
+extern char zapfexists[];
 
 #include <math.h>
 #include <stdio.h>

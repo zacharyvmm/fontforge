@@ -34,7 +34,6 @@
 #include "fvfonts.h"
 #include "gfile.h"
 #include "lookups.h"
-#include "mathconstants.h"
 #include "mem.h"
 #include "namelist.h"
 #include "splinesaveafm.h"
@@ -4313,10 +4312,8 @@ void otf_dump_math(struct alltabs *at, SplineFont *sf) {
 
     if ( sf->MATH!=NULL )
 	math = sf->MATH;
-    else if ( bits!=0 )
-	math = MathTableNew(sf);
     else
-	return;
+	return;  /* MATH table generation disabled (mathconstants.c removed) */
 
     at->math = mathf = GFileTmpfile();
 

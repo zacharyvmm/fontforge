@@ -29,11 +29,11 @@
 
 #include "splineutil.h"
 
-#include "cvundoes.h"
 #include "dumppfa.h"
 #include "encoding.h"
 #include "ffglib_compat.h"
 #include "fontforgevw.h"
+#include "formatstubs.h"
 #include "fvfonts.h"
 #include "fvimportbdf.h"
 #include "glif_name_hash.h"
@@ -7088,10 +7088,6 @@ return( changed );
     continue;
 	}
 	if ( !changed ) {
-	    if ( layer==ly_all )
-		SCPreserveState(sc,dohints);
-	    else if ( layer!=ly_grid )
-		SCPreserveLayer(sc,layer,dohints);
 	    changed = true;
 	}
 	for ( i=cspace[j].first; i<=cspace[j].last; ++i ) {

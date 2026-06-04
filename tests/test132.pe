@@ -1,7 +1,0 @@
-#Needs: fonts/CantarellMin.woff2
-
-Open($1)
-Generate("Cantarell.woff2")
-Close()
-Open("Cantarell.woff2")
-Save("Ambrosia.sfd")

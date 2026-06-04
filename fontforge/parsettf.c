@@ -29,13 +29,12 @@
 
 #include "parsettf.h"
 
-#include "cvundoes.h"
 #include "encoding.h"
 #include "ffglib_compat.h"
 #include "fontforge.h"
+#include "formatstubs.h"
 #include "fvimportbdf.h"
 #include "gfile.h"
-#include "gwidget.h"
 #include "lookups.h"
 #include "macenc.h"
 #include "mem.h"
@@ -46,7 +45,6 @@
 #include "parsettfbmf.h"
 #include "parsettfvar.h"
 #include "psread.h"
-#include "scripting.h"
 #include "sfd1.h"
 #include "splinefont.h"
 #include "splineorder2.h"

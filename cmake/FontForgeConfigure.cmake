@@ -77,14 +77,16 @@ function(fontforge_generate_config template destination)
   # Configurable features
   set(FONTFORGE_CAN_USE_WOFF2 ${ENABLE_WOFF2_RESULT})
 
-  _set_negated(_NO_FFSCRIPT "${ENABLE_NATIVE_SCRIPTING}")
+  # Native scripting removed in first purge; always disabled
+  set(_NO_FFSCRIPT 1)
   _set_negated(_NO_LIBJPEG "${ENABLE_LIBJPEG_RESULT}")
   _set_negated(_NO_LIBPNG "${ENABLE_LIBPNG_RESULT}")
   _set_negated(_NO_LIBSPIRO "${ENABLE_LIBSPIRO_RESULT}")
   _set_negated(_NO_LIBUNIBREAK "${ENABLE_LIBUNIBREAK_RESULT}")
   _set_negated(_NO_LIBTIFF "${ENABLE_LIBTIFF_RESULT}")
   _set_negated(_NO_LIBUNGIF "${ENABLE_LIBGIF_RESULT}")
-  _set_negated(_NO_PYTHON "${ENABLE_PYTHON_SCRIPTING_RESULT}")
+  # Python scripting removed in first purge; always disabled
+  set(_NO_PYTHON 1)
   _set_negated(_NO_LIBREADLINE "${ENABLE_LIBREADLINE_RESULT}")
 
   if(ENABLE_LIBSPIRO_RESULT)

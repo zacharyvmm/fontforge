@@ -28,12 +28,11 @@
 #include <fontforge-config.h>
 
 #include "parsettfbmf.h"
+#include "formatstubs.h"
 
 #include "bitmapchar.h"
-#include "bvedit.h"
 #include "fontforge.h"
 #include "gfile.h"
-#include "gwidget.h"
 #include "mem.h"
 #include "splinefill.h"
 #include "tottf.h"

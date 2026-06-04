@@ -29,7 +29,6 @@
 
 #include "autohint.h"
 
-#include "cvundoes.h"
 #include "dumppfa.h"
 #include "edgelist.h"
 #include "fontforge.h"
@@ -2930,8 +2929,6 @@ void _SplineCharAutoHint( SplineChar *sc, int layer, BlueData *bd, struct glyphd
 	int gen_undoes ) {
     struct glyphdata *gd;
 
-    if ( gen_undoes )
-	SCPreserveHints(sc,layer);
     StemInfosFree(sc->vstem); sc->vstem=NULL;
     StemInfosFree(sc->hstem); sc->hstem=NULL;
     DStemInfosFree(sc->dstem); sc->dstem=NULL;
@@ -3072,7 +3069,6 @@ void SplineFontAutoHintRefs( SplineFont *_sf,int layer) {
 	    if ( sc->changedsincelasthinted &&
 		    !sc->manualhints &&
 		    (sc->layers[layer].refs!=NULL && sc->layers[layer].splines==NULL)) {
-		SCPreserveHints(sc,layer);
 		StemInfosFree(sc->vstem); sc->vstem=NULL;
 		StemInfosFree(sc->hstem); sc->hstem=NULL;
 		AutoHintRefs(sc,layer,bd,true,true);

@@ -38,7 +38,6 @@
 #include "fvfonts.h"
 #include "gfile.h"
 #include "gutils.h"
-#include "gwidget.h"
 #include "lookups.h"
 #include "macenc.h"
 #include "mem.h"

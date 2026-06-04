@@ -331,14 +331,12 @@ extern void FVDontAutoHint(FontViewBase *fv);
 extern void FVAutoInstr(FontViewBase *fv);
 extern void FVClearInstrs(FontViewBase *fv);
 extern void FVClearHints(FontViewBase *fv);
-extern void SCAutoTrace(SplineChar *sc,int layer, int ask);
 extern int FVBParseSelectByPST(FontViewBase *fv,struct lookup_subtable *sub,
 	int search_type);
 extern int SFScaleToEm(SplineFont *sf, int ascent, int descent);
 extern void TransHints(StemInfo *stem,real mul1, real off1, real mul2, real off2, int round_to_int );
 extern void TransDStemHints(DStemInfo *ds,real xmul, real xoff, real ymul, real yoff, int round_to_int );
 extern void VrTrans(struct vr *vr,real transform[6]);
-extern int SFNLTrans(FontViewBase *fv,char *x_expr,char *y_expr);
 
 struct smallcaps {
     double lc_stem_width, uc_stem_width;
@@ -411,6 +409,9 @@ extern Undoes *_CVPreserveTState(CharViewBase *cv,PressedOn *);
 extern void CopySelected(CharViewBase *cv,int doanchors);
 extern void CopyWidth(CharViewBase *cv,enum undotype);
 extern void SCClearSelPt(SplineChar *sc);
+extern int CVLayer(CharViewBase *cv);
+extern int getAdobeEnc(const char *name);
+extern int SCDependsOnSC(SplineChar *parent, SplineChar *child);
 extern void SC_MoreLayers(SplineChar *,Layer *old);
 extern void SCLayersChange(SplineChar *sc);
 extern void SFLayerChange(SplineFont *sf);

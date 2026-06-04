@@ -28,16 +28,15 @@
 #include <fontforge-config.h>
 
 #include "dumppfa.h"
+#include "formatstubs.h"
 
 #include "autohint.h"
-#include "bvedit.h"
 #include "ffglib_compat.h"
 #include "fontforge.h"
 #include "fvfonts.h"
 #include "gfile.h"
 #include "gutils.h"
 #include "parsepfa.h"
-#include "print.h"		/* For makePatName */
 #include "psfont.h"
 #include "psread.h"
 #include "splinefont.h"
@@ -49,7 +48,12 @@
 #include "tottf.h"
 #include "ustring.h"
 #include "utype.h"
-#include "zapfnomen.h"
+
+/* Stubbed zapf dingbats arrays (was in zapfnomen.h) */
+extern char *zapfnomen[];
+extern short zapfwx[];
+extern short zapfbb[][4];
+extern char zapfexists[];
 
 #include <locale.h>
 #include <math.h>
@@ -511,6 +515,23 @@ return( false );
     val = temp[5];
     inverse[4] -= val*inverse[2]; inverse[5] -= val*inverse[3];
 return( true );
+}
+
+/* Moved from print.cpp. Generates a unique pattern name for PDF output.
+ * PDF patterns (including gradients) are fixed to the page, so each
+ * reference with a different transform matrix needs a unique name. */
+static void makePatName(char *buffer,
+	RefChar *ref, SplineChar *sc, int layer, int isstroke, int isgrad) {
+    if ( ref==NULL )
+	sprintf( buffer,"%s_ly%d_%s_%s", sc->name, layer,
+		    isstroke ? "stroke":"fill", isgrad ? "grad": "pattern" );
+    else {
+	sprintf( buffer,"%s_trans_%g,%g,%g,%g,%g,%g_ly%d_%s_%s", sc->name,
+		(double) ref->transform[0], (double) ref->transform[1], (double) ref->transform[2],
+		(double) ref->transform[3], (double) ref->transform[4], (double) ref->transform[5],
+		layer,
+		isstroke ? "stroke":"fill", isgrad ? "grad": "pattern" );
+    }
 }
 
 static void dumpGradient(void (*dumpchar)(int ch,void *data), void *data,

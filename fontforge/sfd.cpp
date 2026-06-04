@@ -31,10 +31,8 @@
 
 #include "autohint.h"
 #include "baseviews.h"
-#include "bvedit.h"
-#include "cvimages.h"
-#include "cvundoes.h"
 #include "encoding.h"
+#include "formatstubs.h"
 #include "ffglib_compat.h"
 #include "ffprocess.h"
 #include "fontforge.h"
@@ -42,7 +40,6 @@
 #include "getline.h"
 #include "gfile.h"
 #include "gutils.h"
-#include "gwidget.h"
 #include "lookups.h"
 #include "mem.h"
 #include "namelist.h"
@@ -3663,7 +3660,7 @@ static ImageList *SFDGetImage(FILE *sfd) {
     /*  bitmap */ /* Eventually it can be removed as all old sfd files get */
     /*  converted. 22/10/2002 */
     if ( base->image_type==it_index && base->clut!=NULL && base->clut->clut_len==2 )
-	img->image = ImageAlterClut(img->image);
+	/* img->image = ImageAlterClut(img->image); — background image clut conversion removed */
 return( img );
 }
 

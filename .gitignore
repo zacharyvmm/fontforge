@@ -1,3 +1,11 @@
+# Ralph agent working files
+.pi/
+.ralph/
+.ralph-archive/
+
+# Downloaded packages
+*.deb
+
 build/
 contrib/admintools/splashimage.c
 Unicode/data/*.txt
