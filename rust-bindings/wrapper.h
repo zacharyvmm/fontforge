@@ -15,3 +15,5 @@
 #include "parsettf.h"
 #include "tottf.h"
 #include "fvfonts.h"
+#include "lookups.h"
+#include "featurefile.h"

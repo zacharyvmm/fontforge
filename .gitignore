@@ -27,4 +27,7 @@ __pycache__
 *.py[co]
 
 build-cpp/
+
+# Rust / Cargo build artifacts
 rust-bindings/target/
+target/

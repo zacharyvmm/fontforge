@@ -5,3 +5,11 @@
 #![allow(dead_code)]
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+
+pub mod bdf;
+pub mod ot_layout;
+pub mod overlap;
+pub mod pstype1;
+pub mod svg;
+pub mod ufo;
+pub mod ufo_read;

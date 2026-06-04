@@ -1,300 +1,286 @@
-# HANDOFF.md — FontForge Library: State & Vision
+# HANDOFF.md — FontForge Library: Phase 2 Progress & Remaining Work
 
-**Date**: 2026-06-04
+**Date**: 2026-06-04 (updated after iteration 20)
+**Status**: Phase 2 in progress. Groups A, B complete. Group C 50% done.
+Groups D, E pending.
 **Goal**: Transform FontForge into the smallest viable C library for font
-manipulation, then port to Rust.
-**Status**: Two purge passes complete. Builds clean. Ready for Rust FFI work.
+manipulation, then port to Rust. Phase 1 delivered a slimmer C library with
+Rust FFI bindings and 3 core module ports. Phase 2 is ~60% complete.
 
 ---
 
-## 1. What We Have Now
+## 1. Phase 1 Summary — What We Have Now
 
-A headless `libfontforge.so` (1,602 dynamic symbols, 15.8 MB) built from
-~249K LOC of C/C++ across 94 source files in 4 directories.
+A headless `libfontforge.so` (2,207 dynamic symbols, 15 MB) built from ~188K
+LOC of C/C++ plus a Rust workspace with `bindgen`-generated FFI bindings and
+9 integration tests covering SFD, spline ops, and TTF/OTF round-trips.
+
+### C Library
 
 | Directory | LOC | Files | Role |
 |-----------|-----|-------|------|
-| `fontforge/` | ~185,000 | 71 (.c/.cpp/.h) | Core library |
-| `gutils/` | ~5,400 | 23 | Image I/O, filesystem, utilities |
+| `fontforge/` | ~171,000 | 67 (.c/.cpp/.h) | Core library |
+| `gutils/` | ~1,700 | 5 | Filesystem, color conversion, mINI |
 | `Unicode/` | ~12,000 | 8 | Unicode tables, ustring |
 | `extern/` | ~2,500 | 2 | Third-party (mINI, cxxopts) |
 | `inc/` | ~3,800 | 14 | Public & internal headers |
-| `tests/` | ~150 | 2 | Minimal test harness |
+| `tests/` | ~300 | 2 | C test harness (SFD + TTF round-trip) |
 
-**Build**: `cmake .. -DBUILD_SHARED_LIBS=ON && make` — 100% success.
-**Tests**: `ctest` — 1/1 pass (SFD round-trip).
+**Build**: `cmake .. -DBUILD_SHARED_LIBS=ON && make` — 100% success, 0 errors.
+**C tests**: `ctest` — 2/2 pass (test_roundtrip, test_ttf_roundtrip).
 **CI**: Single Linux job (build + test + dist) in `.github/workflows/main.yml`.
 
----
+### Rust Workspace
 
-## 2. What Was Removed (Both Purges)
+| Crate | Role |
+|-------|------|
+| `Cargo.toml` (root) | Workspace root |
+| `rust-bindings/` | `bindgen`-generated FFI bindings + integration tests |
 
-### First Purge (~150,000 LOC)
+**Rust tests**: `cargo test` — 9/9 pass:
+- 2 FFI smoke tests (SplineFont create/free)
+- 1 SFD round-trip (4 glyphs, write→reload→verify)
+- 4 spline manipulation tests (overlap removal, add extrema, simplify, correct direction)
+- 2 TTF/OTF round-trips (write→reload→verify)
 
-Removed the entire GUI application and associated infrastructure:
+### What Was Removed (3 Purges)
 
-- `fontforgeexe/` — GTK GUI (~85K LOC)
-- `gdraw/` — Custom UI toolkit (~50K LOC)
-- `python.cpp` / `pyhook/` — Python bindings (~22K LOC)
-- `scripting.cpp` — Native scripting interpreter (~11K LOC)
-- `scstyles.c` / `glyphcomp.c` / `effects.c` / `search.c` — UI-only features (~9K LOC)
-- `desktop/`, `osx/`, `po/`, `doc/`, `tests/` — platform/docs (~30K LOC)
-- `inc/` headers — 13 deleted (gwidget, ggadget, gdraw, gresource, hotkeys, ffglib, etc.)
+- **GUI**: fontforgeexe/, gdraw/ (~135K LOC)
+- **Scripting/Python**: python.cpp, pyhook/, scripting.cpp (~33K LOC)
+- **Undo/Clipboard**: cvundoes.c/h (3,534 LOC), clipnoui.c/h (67 LOC)
+- **Bitmap Editing**: bvedit.c/h (1,005 LOC)
+- **Background Images**: cvimages.c/h (1,189 LOC)
+- **Image I/O**: 18 gutils/gimage* files (~3,700 LOC, 4 library deps dropped)
+- **Misc**: autosave, mathconstants, prefs, packaging, CI, wheel infra
+- **Stubs**: 150+ stubs in `fontforge/formatstubs.c/h` for all removed functionality
 
-### Second Purge (~7,000 LOC)
-
-Removed undo/clipboard, background images, bitmap editing, and dead infrastructure:
-
-- `cvundoes.c/h` (3,534 LOC) — Undo/redo/copy/paste. 63 stubs in formatstubs.c.
-- `clipnoui.c/h` (67 LOC) — No-UI clipboard stubs.
-- `fontviewbase.c` (1,426 → 728 LOC) — Stripped 42 dead FV* batch functions.
-  Kept FVTrans, FVTransFunc, and fv_interface/mv_interface defaults.
-- `cvimages.c/h` (1,189 LOC) — Background images. SCAppendEntityLayers preserved.
-- `bvedit.c/h` (1,005 LOC) — Bitmap editing. 22 stubs.
-- `autosave.c/h` — Already removed in first purge; stubs confirmed.
-- `mathconstants.c/h` (224 LOC) — OpenType MATH. Single call site guarded.
-- `gutils/prefs.c` + `inc/prefs.h` (180 LOC) — Dead preference parsing.
-- `Packaging/` (42 files) — Debian/RedHat/AppImage/Windows packaging.
-- `pyproject.toml`, `README_PYPI.md`, `WHEEL_BUILD_STATUS.md`, `_build_meta/` — Python wheel infra.
-- Dead CMake options: `ENABLE_NATIVE_SCRIPTING`, `ENABLE_PYTHON_SCRIPTING`, `ENABLE_PYTHON_EXTENSION`.
-- Dead CI: `wheels.yml`, `appveyor.yml` deleted; `main.yml` rewritten (230→46 lines).
-- Dead declarations from `fontforge/fontforge.h` (7 removed).
-- Stale `#include "ffglib.h"` from `gutils/fsys.cpp`.
-
-### What Was Evaluated and KEPT
+### What Was Kept
 
 | Module | LOC | Rationale |
 |--------|-----|-----------|
-| `macenc.c/h` | 2,364 | Essential for Mac cmap subtable I/O and AAT feature tables |
-| `spiro.c/h` + `bezctx_ff.c/h` | 500 | Deeply embedded in SplineSet struct (298+ references) |
-| `stemdb.c/h` + `ttfinstrs.c/h` + `autohint.c` | ~10,100 | Auto-hinting kept for now; optional removal later |
+| `macenc.c/h` | 2,364 | Mac cmap subtable I/O and AAT feature tables |
+| `spiro.c/h` + `bezctx_ff.c/h` | 500 | Deeply embedded in SplineSet struct |
+| `stemdb.c` + `ttfinstrs.c` + `autohint.c` | ~10,100 | Auto-hinting (deferred decision) |
+| `namelist.c` | 20,797 | Adobe Glyph List lookup table |
+| `Unicode/` | ~12,000 | Unicode character database tables |
+| `featurefile.c` | 7,573 | OpenType feature file parser |
 
 ---
 
-## 3. Stub Infrastructure
+## 2. Phase 2: Deep Rust Port — Progress
 
-All removed functionality is stubbed in two files:
+Phase 2 continues the incremental port. The goal is to move as much
+functionality as possible from C into Rust, reducing the C surface to
+a set of FFI-wrapped stragglers or zero.
 
-- **`fontforge/formatstubs.c`** (779 lines) — 150+ no-op/return-NULL stubs for
-  undo, clipboard, bitmap editing, background images, autosave, palm/win/mac/ikarus
-  format I/O, print globals, zapf dingbats, scripting globals, and prefs.
-- **`fontforge/formatstubs.h`** (181 lines) — Extern declarations for all stubs.
+### 2.1 What's Done (RALPH-015 through RALPH-020)
 
-Stubs follow the project pattern: void functions are no-ops, pointer-returning
-functions return NULL, int-returning functions return 0. Two stubs provide
-sensible defaults: `BDFCharFindBounds`/`BDFCharQuickBounds` (return stored
-xmin/xmax/ymin/ymax for BDF output), and `SFFindTable` (real implementation
-for TTF table lookup).
+#### Group A: Remaining Format I/O — ✅ COMPLETE
+
+| Format | Rust Source | Test File | Status |
+|--------|-------------|-----------|--------|
+| **UFO** | `src/ufo.rs` (writer) + `src/ufo_read.rs` (reader) | `tests/test_ufo_roundtrip.rs` | Pure-Rust, quick-xml. V2/V3. Round-trip test passes. ✅ |
+| **SVG** | `src/svg.rs` | `tests/test_svg_import.rs` | Pure-Rust SVG font import. Path parsing + contour extraction. ✅ |
+| **BDF** | `src/bdf.rs` | `tests/test_bdf_roundtrip.rs` | Pure-Rust BDF import/export. Round-trip test passes. ✅ |
+| **PS Type 1** | `src/pstype1.rs` | `tests/test_pstype1_roundtrip.rs` | Pure-Rust PFA writer (eexec encryption, charstring encoding). Reads via C FFI. Round-trip + structure tests pass. ✅ |
+| **SFD** | (via C FFI from Phase 1) | `tests/test_sfd_roundtrip.rs` | Done in Phase 1. ✅ |
+| **TTF/OTF** | (via C FFI from Phase 1) | `tests/test_ttf_otf_roundtrip.rs` | Done in Phase 1. ✅ |
+
+**All 7 format I/O paths have working Rust round-trip tests.**
+
+#### Group B: OpenType Layout FFI — ✅ COMPLETE
+
+| Artifact | Description |
+|----------|-------------|
+| `src/ot_layout.rs` | Safe Rust wrapper with tag constants (scripts, langs, features) and wrappers for apply_feature_file, find_lookup, has_gsub/has_gpos, lookup_count_in_feature |
+| `tests/test_ot_layout.rs` | 3 integration tests: feature file apply + round-trip, tag utilities, feature navigation |
+| FFI allowlists | 13 types (OTLookup, FeatureScriptLangList, lookup_subtable, FPST, etc.) + 14 functions |
+
+**Strategy**: FFI-first (as recommended). C code stays; Rust wraps it safely. ✅
+
+#### Group C: Spline Algorithms (Pure Rust) — 🔄 50% DONE
+
+| Task | Status | Notes |
+|------|--------|-------|
+| RALPH-020: Overlap removal | ✅ DONE | `src/overlap.rs` (~400 LOC). Polygon-based boolean union. 3 integration tests vs C output match. Handles proper/vertex/collinear intersections. |
+| RALPH-021: Simplify/Extrema/Direction | ❌ PENDING | Pure-Rust equivalents for SplineCharSimplify, SplineCharAddExtrema, SplineSetsCorrect. |
+
+### 2.2 What's Remaining
+
+#### RALPH-021: Spline simplify/extrema/direction in pure Rust (NEXT TASK)
+
+Port the remaining spline operations from C FFI calls to pure Rust:
+- **SplineCharSimplify**: Remove redundant points, merge colinear edges
+- **SplineCharAddExtrema**: Insert points at curve extrema (x/y-axis aligned)
+- **SplineSetsCorrect**: Ensure clockwise outer / counter-clockwise inner contours
+
+Validation: compare pure-Rust output character-by-character against C FFI results on the same input contours. Use the existing 4-glyph test font as a benchmark.
+
+C source files to port from:
+- `fontforge/splineutil.c` (7,938 LOC) — simplify, transform, intersect, bounds
+- `fontforge/splineutil2.c` (4,429 LOC) — additional operations
+
+#### Group D: Heavy Data Tables — ❌ NOT STARTED
+
+| Task | C Files | LOC | Approach |
+|------|---------|-----|----------|
+| RALPH-022: Namelist replacement | `fontforge/namelist.c` | 20,797 | Extract Adobe Glyph List data → Rust `phf::Map` or sorted array. Delete C file. |
+| RALPH-023: Unicode replacement | `Unicode/` (8 files) | ~12,000 | Replace with `unicode-normalization`, `unicode-segmentation` Rust crates. |
+| RALPH-024: Mac encoding removal | `fontforge/macenc.c/h` | 2,364 | Stub with identity mapping. Legacy Mac cmap support not needed for modern Rust port. |
+
+**Potential LOC reduction**: ~34,000 LOC, 9+ files eliminated.
+
+#### Group E: Auto-Hinting — ❌ NOT STARTED
+
+| Task | C Files | LOC | Options |
+|------|---------|-----|---------|
+| RALPH-025: Auto-hinting decision | `autohint.c`, `stemdb.c`, `ttfinstrs.c` | 10,113 | Keep as C FFI, remove entirely, or replace via HarfBuzz (`harfbuzz-rs`). |
+
+**Savings if removed**: ~10,100 LOC, 3 files. Recommendation: decide based on whether downstream consumers need the native hinting pipeline. HarfBuzz provides modern alternatives.
+
+#### Verification — ❌ NOT STARTED
+
+| Task | Description |
+|------|-------------|
+| RALPH-026 | Phase 2 verification pass 1/3 |
+| RALPH-027 | Phase 2 verification pass 2/3 |
+| RALPH-028 | Phase 2 verification pass 3/3 |
+
+Each pass: full `cargo build`, `cargo test`, `ctest`, symbol audit, no regressions.
 
 ---
 
-## 4. What Remains That Could Still Be Removed
+## 3. Phase 3: Pure Rust Endgame (Vision)
 
-### 4.1 gutils/gimage* — Image I/O (~3,750 LOC)
+Once all C modules are either ported to Rust or wrapped via FFI, the final
+step is to eliminate the C dependency entirely.
 
-18 files for PNG, JPEG, GIF, TIFF, BMP, XPM, XBM, RAS, RGB image reading/writing.
-With `cvimages.c` removed, the primary consumer is gone. These are still compiled
-and linked into `libfontforge.so`.
+### 3.1 Endgame Criteria
 
-**Current consumers of GImage types:**
-- `sfd.cpp` — reads/writes glyph background image data in SFD format
-- `svg.c` — SVG image element handling
-- `dumppfa.c` — PFA bitmap font output
-- `fvimportbdf.c` — BDF bitmap import (creates GImage objects)
-- `psread.c` — PostScript Type 3 image operators
-- `splinefill.c` — fill operations on image data
-- `sflayout.cpp` — glyph layout rendering (FontImage/SFDefaultImage)
+- All format I/O implemented in pure Rust
+- OpenType layout engine in pure Rust (or a thin FFI wrapper on a known-good library)
+- Namelist/Unicode data from Rust ecosystem crates
+- Auto-hinting via HarfBuzz Rust bindings or removed
+- `libfontforge.so` no longer linked
+- C source deleted from the repository
 
-**Approach**: The image-related code paths in these files handle glyph background
-images and bitmap strikes — editor features, not core font manipulation. Each
-consumer would need its image paths stubbed (skip image data in SFD, return empty
-images in SVG, etc.). After that, all 18 gimage files can be removed from
-`gutils/CMakeLists.txt` and deleted.
-
-**Savings**: ~3,750 LOC, 18 files, plus removal of libpng/libjpeg/libtiff/libgif
-optional dependencies.
-
-### 4.2 stemdb + ttfinstrs + autohint — Auto-hinting (~10,100 LOC)
-
-The auto-hinting pipeline:
-- `autohint.c` (3,448 LOC) — main auto-hinting algorithm
-- `stemdb.c` (6,088 LOC, 6th largest file) — stem detection database
-- `ttfinstrs.c` (577 LOC) — TrueType instruction bytecode assembly
-
-If auto-hinting is not required by the Rust port (hinting can be done in Rust
-or with external tools), these can be removed. `autohint.c` is called from
-`splinefont.c`, `fontviewbase.c`, and `splineutil2.c`. The call sites would
-be guarded or stubbed.
-
-**Savings**: ~10,100 LOC, 3 files.
-
-### 4.3 macenc.c/h — Mac Encoding Tables (~2,360 LOC)
-
-Mac OS character encoding tables used for reading/writing Mac-encoded cmap
-subtables in TrueType fonts. If the Rust port does not need to support legacy
-Mac-encoded TrueType fonts, this can be stubbed (`MacEncToUnicode` → identity
-mapping, `MacFeatureAdd` → no-op).
-
-**Savings**: ~2,360 LOC.
-
-### 4.4 Expanded Test Suite
-
-Currently only one test exists: SFD round-trip with 4 glyphs. The HANDOFF from
-the first purge recommended restoring tests before the Rust port. Priority tests:
-
-| Test | What It Validates |
-|------|-------------------|
-| TTF round-trip | Read .ttf → save .ttf → verify font data intact |
-| OTF round-trip | Read .otf → save .otf → verify OpenType layout tables |
-| UFO round-trip | Read .ufo → save .ufo → verify glyph/spline fidelity |
-| SVG import | Read .svg font → verify glyph contours |
-| Spline ops | Simplify, overlap removal, direction correction |
-| Property-based | Random fonts through save→load→compare pipeline |
-
----
-
-## 5. Vision: The Rust Port
-
-The entire purpose of slimming the C codebase is to create a minimal,
-well-understood FFI surface for a Rust font manipulation library.
-
-### 5.1 Architecture
+### 3.2 Target Crate Structure
 
 ```
-┌─────────────────────────────────────────────────┐
-│                 Rust Library                      │
-│  (font I/O, spline ops, OpenType layout,        │
-│   validation, hinting)                           │
-├─────────────────────────────────────────────────┤
-│              C FFI Bindings                       │
-│  (bindgen-generated or hand-written extern "C")  │
-├─────────────────────────────────────────────────┤
-│           libfontforge.so                         │
-│  (thin C shim — only what hasn't been ported)    │
-└─────────────────────────────────────────────────┘
+fontforge-rs/
+├── fontforge-core/         # Core types: SplineFont, SplineChar, SplineSet, Point
+├── fontforge-io/           # Format I/O: SFD, TTF, OTF, UFO, SVG, BDF, PS
+├── fontforge-layout/       # OpenType GPOS/GSUB/feature files
+├── fontforge-ops/          # Spline operations: simplify, overlap, extrema, direction
+├── fontforge-ffi/          # (Temporary) C FFI bridge — deleted in Phase 3 endgame
+└── fontforge/              # Top-level re-export crate
 ```
-
-The port should be incremental:
-1. Identify functions by category (font I/O, spline ops, OpenType layout)
-2. Write Rust equivalents, validated against C output
-3. Cut over to Rust implementation, remove C code
-4. Eventually delete `libfontforge.so` entirely
-
-### 5.2 FFI Surface
-
-The natural API boundary is at the `SplineFont*` / `SplineChar*` level:
-
-**Font I/O**:
-- `SFReadSFD()`, `SFWriteSFD()`
-- `SFReadTTF()`, `SFWriteTTF()`
-- `_ReadUFO()`, `_WriteUFO()`
-- `SFReadSVG()`
-- `ReadPSFont()` (Type 1)
-
-**Spline manipulation**:
-- `SplineCharSimplify()`, `SplineCharOverlapRemove()`
-- `SplineCharAddExtrema()`, `SplineCharCorrectDir()`
-- `SplinePointListTransform()`, `SplineTransform()`
-
-**OpenType layout**:
-- `FeatRead()` (feature file parsing)
-- GPOS/GSUB table construction functions
-- Lookup/chaining context builders
-
-**Key fact**: The `FontViewBase` / `CharViewBase` / `Undoes` wrapper types
-have been removed or neutered in the second purge. The FFI binds directly
-against `SplineFont` and `SplineChar` structs — no view layer indirection.
-
-### 5.3 What to Keep in C (if anything)
-
-Some components may be impractical to port:
-- **namelist.c** (20,797 LOC) — Adobe Glyph List. A static lookup table that could
-  be code-generated in Rust or loaded from a data file at runtime.
-- **Unicode/** (12,000 LOC) — Unicode character database tables. Could be replaced
-  by the `unicode-*` Rust crates.
-- **featurefile.c** (7,573 LOC) — OpenType feature file parser. Complex and
-  battle-tested; may be worth keeping as C or wrapping via FFI.
 
 ---
 
-## 6. Immediate Next Steps (Ordered)
+## 4. Phase 2 Immediate Next Steps (Ordered)
 
-### Step 1: Git cleanup
+All planning is done. `.ralph/TODO.md` has tasks RALPH-015 through RALPH-028
+with dependencies and acceptance criteria. RALPH-015 through RALPH-020 are
+done. Start at RALPH-021.
 
-The working directory has two untracked files (`.pi/`, `.ralph/`) containing
-Ralph agent planning artifacts. These are development process files, not project
-deliverables. Add to `.gitignore` or commit separately.
+### ⏭️ Next: RALPH-021 — Pure-Rust Spline Simplify/Extrema/Direction
 
-The second purge changes are already committed under the message `Refactored
-into a smaller font management library`. A more specific commit message is
-warranted — squash or amend if appropriate.
+**This is the immediate next task.** Port SplineCharSimplify,
+SplineCharAddExtrema, and SplineSetsCorrect to pure Rust. The overlap
+removal (RALPH-020) is already done, establishing the pattern:
 
-### Step 2: Complete verification
+1. Read C source (`fontforge/splineutil.c`, `fontforge/splineutil2.c`)
+   to understand the algorithm.
+2. Implement pure-Rust equivalent in `rust-bindings/src/simplify.rs` or similar.
+3. Add integration tests in `rust-bindings/tests/` that compare
+   pure-Rust output against C FFI results on the same input contours.
+4. Use the 4-glyph test font as a benchmark.
 
-Run the third verification pass (build → ctest → stale ref check → symbol check).
-Status after pass 2/3: all checks pass, zero defects.
+Reference: RALPH-020 (`rust-bindings/src/overlap.rs`, `tests/test_overlap_pure_rust.rs`)
+shows the exact pattern — extract contours via FFI, run both C and Rust,
+compare contour count + bounding boxes + SFD round-trip.
 
-### Step 3: Decide on gimage cleanup
+### After RALPH-021
 
-The 18 `gutils/gimage*` files are the largest remaining dead-code block
-flagged by the original HANDOFF audit. Decision needed:
-- **Remove now**: stub image paths in SFD/SVG/PFA/BDF consumers (~1 day)
-- **Defer**: leave for Rust port phase; remove when porting those consumers
+In recommended order:
 
-### Step 4: Begin Rust port
+| Order | Task | Description |
+|-------|------|-------------|
+| 2 | RALPH-022 | Replace `fontforge/namelist.c` with Rust static data |
+| 3 | RALPH-023 | Replace `Unicode/` with Rust ecosystem crates |
+| 4 | RALPH-024 | Remove or stub `fontforge/macenc.c/h` |
+| 5 | RALPH-025 | Decide auto-hinting strategy (keep/remove/replace) |
+| 6 | RALPH-026 | Phase 2 verification pass 1/3 |
+| 7 | RALPH-027 | Phase 2 verification pass 2/3 |
+| 8 | RALPH-028 | Phase 2 verification pass 3/3 |
 
-Starting point: use `bindgen` on the public headers to generate raw FFI
-bindings. Then port one category at a time, validating each step with
-format round-trip tests.
+---
 
-Recommended order:
-1. **SFD read/write** — the native format, well-understood, good test vehicle
-2. **Spline manipulation** — core algorithms, self-contained
-3. **TTF/OTF I/O** — most complex, many edge cases
-4. **OpenType layout** — feature files, GPOS/GSUB
-5. **UFO, SVG, Type 1** — secondary formats
-6. **Hinting** — either port or defer (external tools exist)
+## 5. Current Build & Test Commands
 
-### Step 5: Remove C entirely (endgame)
+```bash
+# Environment setup (custom dev-root, no sudo)
+export PATH="/tmp/cmake-3.30.3-linux-x86_64/bin:/tmp/dev-root/usr/bin:$PATH"
+export PKG_CONFIG_PATH="/tmp/dev-root/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig"
 
-Once all functionality is ported and validated, delete `libfontforge.so` and
-all C source. The Rust library stands alone.
+# C build
+mkdir -p build && cd build
+cmake .. -DBUILD_SHARED_LIBS=ON \
+  -DCMAKE_PREFIX_PATH=/tmp/dev-root/usr \
+  -DCMAKE_FIND_LIBRARY_SUFFIXES=".so" \
+  -DENABLE_HARFBUZZ=OFF
+make -j$(nproc)
+
+# C tests
+cd build && ctest --output-on-failure
+
+# Rust build & test
+source "$HOME/.cargo/env"
+export LIBCLANG_PATH=/usr/lib/llvm-21/lib
+export LD_LIBRARY_PATH=$PWD/build/lib:$LD_LIBRARY_PATH
+cargo build
+cargo test
+```
+
+---
+
+## 6. Phase 1 Decisions (Recorded for Context)
+
+1. **fv_interface pattern preserved** — Full FontViewBase removal would touch
+   29 macro call sites across 8 files; not worth the risk.
+2. **macenc, spiro, bezctx_ff kept** — Too deeply integrated to remove without
+   structural changes to SplineSet.
+3. **autohint/stemdb/ttfinstrs kept** — Deferred to Phase 2 decision (see §4 Step 6).
+4. **gimage removed** — 18 files excluded from build, 11 consumer sites stubbed.
+5. **_NO_PYTHON and _NO_FFSCRIPT hardcoded to 1** — Unconditionally defined in
+   CMakeLists.txt and FontForgeConfigure.cmake.
+6. **HarfBuzz disabled** — `ENABLE_HARFBUZZ=OFF`. May re-enable in Phase 2 for
+   hinting replacement.
 
 ---
 
 ## 7. Summary Statistics
 
-| Metric | Original | After Purge 1 | After Purge 2 |
-|--------|----------|---------------|---------------|
-| Total LOC | ~350,000 | ~251,000 | ~249,000 |
-| Source files compiled | ~250 | ~85 | ~94 |
-| Undo/clipboard | Present | Still present | Removed |
-| Bitmap editing | Present | Still present | Stubbed |
-| Background images | Present | Still present | Stubbed |
-| Image I/O (gimage) | Present | Still present | Still present |
-| Auto-hinting | Present | Still present | Still present |
-| GUI | Present | Removed | Removed |
-| Python bindings | Present | Removed | Removed |
-| Scripting | Present | Removed | Removed |
-| Wheel/CI/Packaging | Present | Partially broken | Cleaned |
-| Tests | Present | Removed | Minimal (1 test) |
-
-### Build & Test
-
-```bash
-mkdir build && cd build
-cmake .. -DBUILD_SHARED_LIBS=ON
-make -j$(nproc)
-# Produces: build/lib/libfontforge.so (1602 symbols, 15.8 MB)
-
-ctest
-# 1/1 pass: test_roundtrip (SFD save→load→verify)
-```
+| Metric | Original | After Phase 1 | Phase 2 Current | Phase 2 Target |
+|--------|----------|---------------|-----------------|----------------|
+| Total C LOC | ~350,000 | ~188,000 | ~188,000 | < 100,000 |
+| Source files compiled | ~250 | ~76 | ~76 | < 40 |
+| Format I/O ported to Rust | 0 | 3 (SFD, TTF, OTF) | 7 (UFO, SVG, BDF, PS done) | 7+ |
+| Spline ops ported | 0 | 0 (FFI-validated) | 1/4 (overlap done) | Pure Rust (4 ops) |
+| OpenType layout | C only | C only | FFI-wrapped ✅ | FFI-wrapped ✅ |
+| Namelist | C only | C only | C only | Rust static data |
+| Unicode | C only | C only | C only | Rust crates |
+| Auto-hinting | Present | Present | Present | Decision pending |
+| C tests | Present (many) | 2 | 2 | Kept until C deleted |
+| Rust tests | 0 | 9 | **32** (21 integration + 11 unit) | 40+ |
+| Rust source files | 0 | 3 | **9** | 12+ |
 
 ---
 
-## 8. Project Files Reference
+## 8. Key Project Files
 
+### C Library
 | File | Purpose |
 |------|---------|
 | `fontforge/formatstubs.c` | 150+ stubs for removed functionality |
@@ -302,29 +288,56 @@ ctest
 | `fontforge/fontviewbase.c` | FVTrans, FVTransFunc, fv_interface defaults (728 LOC) |
 | `fontforge/noprefs.c` | Stub prefs_interface (NOUI_SavePrefs, etc.) |
 | `fontforge/start.c` | Library init (InitSimpleStuff, DoInit) |
-| `tests/test_roundtrip.c` | SFD round-trip test (4 glyphs) |
+| `fontforge/ufo.c` | C UFO I/O (4,372 LOC — now superseded by Rust port) |
+| `fontforge/splineutil.c` | Spline utilities (7,938 LOC — target for RALPH-021) |
+| `fontforge/splineutil2.c` | Additional spline ops (4,429 LOC) |
+| `fontforge/namelist.c` | Adobe Glyph List (20,797 LOC — target for RALPH-022) |
+| `fontforge/macenc.c/h` | Mac encoding (2,364 LOC — target for RALPH-024) |
+| `fontforge/autohint.c` | Auto-hinter (3,448 LOC — target for RALPH-025) |
+| `fontforge/stemdb.c` | Stem database (6,088 LOC — target for RALPH-025) |
+| `fontforge/ttfinstrs.c` | TTF instructing (577 LOC — target for RALPH-025) |
+| `fontforge/featurefile.c` | OT feature file parser (FFI-wrapped ✅) |
+| `fontforge/tottfgpos.c` | GPOS table (FFI-wrapped ✅) |
+| `fontforge/tottfgsub.c` | GSUB table (FFI-wrapped ✅) |
+| `fontforge/lookups.c` | OT lookup engine (FFI-wrapped ✅) |
+| `inc/gimage.h` | Types-only stub (Color, GClut, image_type, struct _GImage) |
+| `tests/test_roundtrip.c` | C SFD round-trip test (4 glyphs) |
+| `tests/test_ttf_roundtrip.c` | C TTF round-trip test |
+
+### Rust Workspace
+| File | Purpose |
+|------|---------|
+| `Cargo.toml` | Rust workspace root |
+| `rust-bindings/build.rs` | bindgen configuration + allowlists |
+| `rust-bindings/wrapper.h` | Headers included for bindgen |
+| `rust-bindings/src/lib.rs` | FFI bindings entry point + module declarations |
+| `rust-bindings/src/ufo.rs` | 🆕 Pure-Rust UFO writer (quick-xml) |
+| `rust-bindings/src/ufo_read.rs` | 🆕 Pure-Rust UFO reader |
+| `rust-bindings/src/svg.rs` | 🆕 Pure-Rust SVG font import |
+| `rust-bindings/src/bdf.rs` | 🆕 Pure-Rust BDF import/export |
+| `rust-bindings/src/pstype1.rs` | 🆕 Pure-Rust PS Type 1 writer (eexec encryption) |
+| `rust-bindings/src/ot_layout.rs` | 🆕 Safe OT layout FFI wrapper (scripts, langs, features) |
+| `rust-bindings/src/overlap.rs` | 🆕 Pure-Rust overlap removal (~400 LOC) |
+| `rust-bindings/tests/test_ffi.rs` | FFI smoke tests (SplineFont create/free) |
+| `rust-bindings/tests/test_sfd_roundtrip.rs` | SFD round-trip test |
+| `rust-bindings/tests/test_spline_ops.rs` | Spline ops via FFI (simplify, extrema, overlap, direction) |
+| `rust-bindings/tests/test_ttf_otf_roundtrip.rs` | TTF/OTF round-trip tests |
+| `rust-bindings/tests/test_ufo_roundtrip.rs` | 🆕 UFO round-trip test |
+| `rust-bindings/tests/test_svg_import.rs` | 🆕 SVG font import test |
+| `rust-bindings/tests/test_bdf_roundtrip.rs` | 🆕 BDF round-trip test |
+| `rust-bindings/tests/test_pstype1_roundtrip.rs` | 🆕 PS Type 1 round-trip test |
+| `rust-bindings/tests/test_ot_layout.rs` | 🆕 OT layout FFI wrapper tests |
+| `rust-bindings/tests/test_overlap_pure_rust.rs` | 🆕 Pure-Rust overlap vs C comparison tests |
+
+### Infrastructure
+| File | Purpose |
+|------|---------|
 | `.github/workflows/main.yml` | CI: Linux build + test + dist |
-| `.ralph/` | Ralph agent planning/state/runs (development artifacts) |
-
----
-
-## 9. Decisions Made (Recorded for Future Context)
-
-1. **fv_interface pattern preserved** — Option A from fontviewbase audit.
-   Full FontViewBase removal (Option B) would touch 29 macro call sites across
-   8 files; not worth the risk at this stage.
-
-2. **macenc, spiro, bezctx_ff kept** — Too deeply integrated to remove
-   without structural changes to SplineSet or breaking Mac cmap support.
-
-3. **autohint/stemdb/ttfinstrs kept** — Deferred decision. Auto-hinting is
-   a candidate for Rust implementation or external tooling.
-
-4. **gimage deferred** — The 18 image I/O files remain. This is the
-   largest remaining cleanup opportunity and should be addressed before
-   or during early Rust port phases.
-
-5. **_NO_PYTHON and _NO_FFSCRIPT hardcoded to 1** — These macros are
-   defined unconditionally in CMakeLists.txt and FontForgeConfigure.cmake.
-   Any code paths guarded by `#ifndef _NO_PYTHON` or `#ifndef _NO_FFSCRIPT`
-   are excluded from the build.
+| `.gitignore` | Updated for .pi/, .ralph/, Rust artifacts |
+| `.ralph/STATE.json` | Current state (RALPH-021 pending, phase 2, iteration 20) |
+| `.ralph/TODO.md` | Phase 2 task list (RALPH-015 through RALPH-028) |
+| `.ralph/PROGRESS.md` | Detailed progress log (iterations 001-020) |
+| `.ralph/HANDOFF.md` | Short handoff for Ralph workers |
+| `.ralph/GOAL.md` | Phase 2 goal, success criteria, stop conditions |
+| `.ralph/PLAN.md` | Phase 2 milestones M1-M7 |
+| `.ralph/VERIFY.md` | Phase 2 verification plan |
