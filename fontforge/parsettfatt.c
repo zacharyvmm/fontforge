@@ -30,7 +30,6 @@
 #include "parsettfatt.h"
 
 #include "fontforge.h"
-#include "ggadget.h"		/* For GTextInfo */
 #include "lookups.h"
 #include "mem.h"
 #include "parsettf.h"

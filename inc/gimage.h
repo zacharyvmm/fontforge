@@ -59,7 +59,7 @@ struct hslrgba {
 typedef struct clut {
     int16_t clut_len;
     unsigned int is_grey: 1;
-    uint32_t trans_index;		/* will be ignored for cluts in images, use base->trans instead */
+    uint32_t trans_index;
     Color clut[256];
 } GClut;
 
@@ -87,30 +87,21 @@ typedef struct revcmap RevCMap;
 
 enum image_type { it_mono, it_bitmap=it_mono, it_index, it_true, it_rgba };
 
+/* GImage types retained as opaque definitions for FontData layout compatibility.
+ * All GImage I/O functions have been removed. Do not instantiate. */
 struct _GImage {
-/* Format: bitmaps are stored with the most significant bit first in byte units
-	    indexed    images are stored in byte units
-	    true color images are stored in 4 byte units, 0,red,green,blue
-	    rgba       images are stored in 4 byte units, alpha,red,green blue
-*/
     enum image_type image_type: 2;
-    int16_t delay;		/* for animated GIFs, delay to next frame */
+    int16_t delay;
     int32_t width, height;
     int32_t bytes_per_line;
     uint8_t *data;
     GClut *clut;
-    Color trans;		/* PNG supports more than one transparent color, we don't */
-				/* for non-true color images this is the index, not a color */
+    Color trans;
 };
 
-/* We deal with 1 bit, 8 bit and 32 bit images internal. 1 bit images may have*/
-/*  a clut (if they don't assume bw, 0==black, 1==white), 8 bit must have a */
-/*  clut, 32bit are actually 24 bit RGB images, but we pad them for easy */
-/*  accessing. it_screen means that we've got an image that can be drawn */
-/*  directly on the screen */
 typedef struct gimage {
-    short list_len;		/* length of list */
-    union {			/* depends on whether has_list is set */
+    short list_len;
+    union {
 	struct _GImage *image;
     	struct _GImage **images;
     } u;
@@ -136,55 +127,7 @@ typedef struct gpoint {
 extern "C" {
 #endif
 
-extern GImage *GImageCreate(enum image_type type, int32_t width, int32_t height);
-extern GImage *_GImage_Create(enum image_type type, int32_t width, int32_t height);
-extern void GImageDestroy(GImage *gi);
-extern GImage *GImageCreateAnimation(GImage **images, int n);
-extern GImage *GImageAddImageBefore(GImage *dest, GImage *src, int pos);
-
-extern Color GImageGetPixelRGBA(GImage *base,int x, int y);
-extern int GImageGetWidth(GImage *);
-extern int GImageGetHeight(GImage *);
-extern void *GImageGetUserData(GImage *img);
-extern void GImageSetUserData(GImage *img,void *userdata);
-extern RevCMap *GClutReverse(GClut *clut,int side_size);
-void GClut_RevCMapFree(RevCMap *rev);
-extern GClut *GImageFindCLUT(GImage *image,GClut *clut,int clutmax);
-extern int GImageGreyClut(GClut *clut);
-extern Color _GImage_ColourFName(char *name);
-extern Color GDrawColorDarken(Color col, int by);
-extern Color GDrawColorBrighten(Color col, int by);
-
-extern int GImageWriteGImage(GImage *gi, char *filename);
-extern int GImageWrite_Bmp(GImage *gi, FILE *fp);
-extern int GImageWriteBmp(GImage *gi, char *filename);
-extern GImage *GImageRead_Bmp(FILE *file);
-extern GImage *GImageReadBmp(char *filename);
-extern int GImageWriteXbm(GImage *gi, char *filename);
-extern GImage *GImageReadXbm(char *filename);
-extern int GImageWriteXpm(GImage *gi, char *filename);
-extern GImage *GImageReadXpm(char *filename);
-extern GImage *GImageReadTiff(char *filename);
-extern GImage *GImageReadJpeg(char *filename);
-extern GImage *GImageRead_Jpeg(FILE *fp);
-extern int GImageWrite_Jpeg(GImage *gi, FILE *outfile, int quality, int progressive);
-extern int GImageWriteJpeg(GImage *gi, char *filename, int quality, int progressive);
-extern GImage *GImageRead_Png(FILE *fp);
-extern GImage *GImageReadPng(char *filename);
-extern GImage *GImageReadPngBuf(char* buf, size_t sz);
-extern int GImageWrite_Png(GImage *gi, FILE *fp, int progressive);
-extern int GImageWritePng(GImage *gi, char *filename, int progressive);
-extern int GImageWritePngBuf(GImage *gi, char** buf, size_t* sz, int compression_level, int progressive);
-extern GImage *GImageReadGif(char *filename);
-extern int GImageWriteGif(GImage *gi,char *filename,int progressive);
-extern GImage *GImageReadRas(char *filename);		/* Sun Raster */
-extern GImage *GImageReadRgb(char *filename);		/* SGI */
-extern GImage *GImageRead(char *filename);
-
-extern void GImageDrawRect(GImage *img,GRect *r,Color col);
-extern void GImageDrawImage(GImage *dest,GImage *src,GRect *junk,int x, int y);
-extern void GImageBlendOver(GImage *dest,GImage *src,GRect *from,int x, int y);
-
+/* Color conversion functions (implemented in gutils/gcol.c) */
 extern void gRGB2HSL(struct hslrgb *col);
 extern void gHSL2RGB(struct hslrgb *col);
 extern void gRGB2HSV(struct hslrgb *col);

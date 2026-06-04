@@ -31,7 +31,6 @@
 
 #include "fontforge.h"
 #include "fvfonts.h"
-#include "gwidget.h"
 #include "mem.h"
 #include "parsettf.h"
 #include "splineutil.h"

@@ -28,9 +28,9 @@
 
 #include <fontforge-config.h>
 
-#include "cvundoes.h"
 #include "dumppfa.h"
 #include "ffglib_compat.h"
+#include "formatstubs.h"
 #include "fontforgevw.h"
 #include "fvfonts.h"
 #include "lookups.h"
@@ -211,7 +211,6 @@ return;
     continue;
 	else if ( metrics==NULL && sc->width!=dlist->sc->width )
     continue;
-	SCPreserveLayer(dlist->sc,layer,false);
 	SplinePointListShift(dlist->sc->layers[layer].splines,off,tpt_AllPoints);
 	for ( ref = dlist->sc->layers[layer].refs; ref!=NULL; ref=ref->next )
 		if ( ref->sc!=sc ) {
@@ -486,7 +485,6 @@ return;
 	    (!copymetadata ||
 		(sc->unicodeenc==-1 && strcmp(sc->name,".notdef")==0)))
 return;
-    SCPreserveLayer(sc,layer,2);
     if ( copymetadata ) {
 	sc->unicodeenc = -1;
 	free(sc->name);
@@ -505,7 +503,6 @@ return;
     if ( sc->layers[0].splines==NULL && sc->layers[ly_back].images==NULL &&
 	    sc->layers[0].refs==NULL )
 return;
-    SCPreserveBackground(sc);
     SCClearLayer(sc,ly_back);
     SCCharChangedUpdate(sc,ly_back);
 }
@@ -514,7 +511,6 @@ void SCCopyLayerToLayer(SplineChar *sc, int from, int to,int doclear) {
     SplinePointList *fore, *temp;
     RefChar *ref, *oldref;
 
-    SCPreserveLayer(sc,to,false);
     if ( doclear )
 	SCClearLayer(sc,to);
 
@@ -2174,7 +2170,6 @@ static int BuildEllipse(int clockwise,bigreal r1,bigreal r2, bigreal theta,
 return( false );
     }
     if ( ellipse_to_back && ss!=NULL ) {
-	SCPreserveBackground(cv->sc);
 	if ( cv->sc->layers[ly_back].order2 )
 	    ss = SplineSetsConvertOrder(ss,true);
 	ss->next = cv->sc->layers[ly_back].splines;
@@ -2182,8 +2177,6 @@ return( false );
     }
     if ( order2 )
 	spl = SplineSetsConvertOrder(spl,true);
-    if ( !changed )
-	CVPreserveState(cv);
     if ( sp1->next!=NULL ) {
 	chunkfree(sp1->next,sizeof(Spline));
 	sp1->next = sp2->prev = NULL;
@@ -2428,8 +2421,6 @@ static int MakeShape(CharViewBase *cv,SplinePointList *spl1,SplinePointList *spl
 	SplinePoint *sp1,SplinePoint *sp2,int order2, int changed, int do_arc,
 	int ellipse_to_back ) {
     if ( !do_arc || ( sp1->me.x==sp2->me.x && sp1->me.y==sp2->me.y )) {
-	if ( !changed )
-	    CVPreserveState(cv);
 	sp1->nextcp = sp1->me;
 	sp2->prevcp = sp2->me;
 	if ( sp1->next==NULL )
@@ -2493,7 +2484,6 @@ void _CVMenuMakeLine(CharViewBase *cv,int do_arc,int ellipse_to_back) {
 		!(sp1->next!=NULL && sp1->next->to==sp2) &&
 		!(sp1->prev!=NULL && sp1->prev->from==sp2) )) {
 	layer = CVLayer(cv);
-	CVPreserveState(cv);
 	if ( sp1->next!=NULL ) {
 	    sp = sp1; sp1 = sp2; sp2 = sp;
 	    spl = spl1; spl1 = spl2; spl2 = spl;
@@ -2544,7 +2534,6 @@ void _CVMenuMakeLine(CharViewBase *cv,int do_arc,int ellipse_to_back) {
 		    if ( MakeShape(cv,spl,spl,sp,sp->next->to,sp->next->order2,changed,do_arc,ellipse_to_back))
 			changed = true;
 		    if ( !changed ) {
-			CVPreserveState(cv);
 			changed = true;
 		    }
 		    if (!do_arc) {

@@ -31,7 +31,6 @@
 
 #include "edgelist2.h"
 #include "fontforge.h"
-#include "gwidget.h"		/* For PostNotice */
 #include "splinefont.h"
 #include "splineorder2.h"
 #include "splineutil.h"

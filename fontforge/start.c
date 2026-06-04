@@ -52,6 +52,12 @@ struct lconv localeinfo;
 const char *coord_sep = ",";
 int quiet = 0;
 
+/* Active font view and character in UI (used by scripting interface).
+ * In headless mode, these are set by scripts that load fonts. */
+FontViewBase *fv_active_in_ui = NULL;
+SplineChar *sc_active_in_ui = NULL;
+int layer_active_in_ui = ly_fore;
+
 static void initadobeenc(void) {
     int i,j;
 

@@ -30,25 +30,21 @@
 #include "fvimportbdf.h"
 
 #include "bitmapchar.h"
-#include "bvedit.h"
-#include "cvimages.h"
 #include "encoding.h"
+#include "formatstubs.h"
 #include "ffglib_compat.h"
 #include "ffprocess.h"
 #include "fontforgevw.h"
 #include "fvfonts.h"
 #include "gfile.h"
-#include "macbinary.h"
 #include "mem.h"
 #include "namelist.h"
-#include "palmfonts.h"
 #include "parsettf.h"
 #include "splinefill.h"
 #include "splineutil.h"
 #include "splineutil2.h"
 #include "ustring.h"
 #include "utype.h"
-#include "winfonts.h"
 
 #include <math.h>
 #include "ffunistd.h"
@@ -2322,47 +2318,9 @@ return( any );
 }
 
 /* sf and bdf are assumed to have the same gids */
-static void SFAddToBackground(SplineFont *sf,BDFFont *bdf) {
-    struct _GImage *base;
-    GClut *clut;
-    GImage *img;
-    int i;
-    SplineChar *sc; BDFChar *bdfc;
-    real scale = (sf->ascent+sf->descent)/(double) (bdf->ascent+bdf->descent);
-    real yoff = sf->ascent-bdf->ascent*scale;
-
-    for ( i=0; i<sf->glyphcnt && i<bdf->glyphcnt; ++i ) {
-	if ( bdf->glyphs[i]!=NULL ) {
-	    if ( (sc = sf->glyphs[i])==NULL ) {
-		sc = sf->glyphs[i] = SplineCharCreate(2);
-		sc->name = copy(bdf->glyphs[i]->sc->name);
-		sc->orig_pos = i;
-		sc->unicodeenc = bdf->glyphs[i]->sc->unicodeenc;
-	    }
-	    bdfc = bdf->glyphs[i];
-
-	    base = calloc(1,sizeof(struct _GImage));
-	    base->image_type = it_mono;
-	    base->data = bdfc->bitmap;
-	    base->bytes_per_line = bdfc->bytes_per_line;
-	    base->width = bdfc->xmax-bdfc->xmin+1;
-	    base->height = bdfc->ymax-bdfc->ymin+1;
-	    bdfc->bitmap = NULL;
-
-	    clut = calloc(1,sizeof(GClut));
-	    clut->clut_len = 2;
-	    clut->clut[0] = default_background;
-	    clut->clut[1] = 0x808080;
-	    clut->trans_index = 0;
-	    base->trans = 0;
-	    base->clut = clut;
-
-	    img = calloc(1,sizeof(GImage));
-	    img->u.image = base;
-
-	    SCInsertImage(sc,img,scale,yoff+(bdfc->ymax+1)*scale,bdfc->xmin*scale,ly_back);
-	}
-    }
+static void SFAddToBackground(SplineFont *UNUSED(sf), BDFFont *bdf) {
+    /* GImage removed — background image insertion is dead code.
+     * Just free the BDF font. */
     BDFFontFree(bdf);
 }
 

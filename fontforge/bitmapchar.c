@@ -28,9 +28,8 @@
 #include <fontforge-config.h>
 
 #include "bitmapchar.h"
+#include "formatstubs.h"
 
-#include "bvedit.h"
-#include "cvundoes.h"
 #include "dumpbdf.h"
 #include "fontforgevw.h"
 #include "fvfonts.h"
@@ -924,7 +923,6 @@ return;
     }
     bc->refs = NULL;
     
-    BCPreserveState(bc);
     BCFlattenFloat(bc);
     memset(bc->bitmap,'\0',bc->bytes_per_line*(bc->ymax-bc->ymin+1));
     BCCompressBitmap(bc);

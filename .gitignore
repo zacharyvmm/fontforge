@@ -1,3 +1,11 @@
+# Ralph agent working files
+.pi/
+.ralph/
+.ralph-archive/
+
+# Downloaded packages
+*.deb
+
 build/
 contrib/admintools/splashimage.c
 Unicode/data/*.txt
@@ -19,3 +27,7 @@ __pycache__
 *.py[co]
 
 build-cpp/
+
+# Rust / Cargo build artifacts
+rust-bindings/target/
+target/

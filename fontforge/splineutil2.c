@@ -31,7 +31,6 @@
 #include "splineutil2.h"
 
 #include "autohint.h"
-#include "cvundoes.h"
 #include "edgelist.h"
 #include "ffglib_compat.h"
 #include "fontforge.h"
@@ -2137,7 +2136,6 @@ void SPLStartToLeftmost(SplineChar *sc,SplinePointList *spl, int *changed) {
 	}
 	if ( best!=spl->first ) {
 	    if ( !*changed ) {
-		SCPreserveState(sc,false);
 		*changed = true;
 	    }
 	    SplineSetSpirosClear(spl);
@@ -2238,7 +2236,6 @@ return;
 	    }
 	}
 	if ( diff && !changed ) {
-	    SCPreserveLayer(sc,layer,false);
 	    changed = true;
 	}
 	if ( diff ) {

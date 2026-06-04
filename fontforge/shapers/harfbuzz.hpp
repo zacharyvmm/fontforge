@@ -24,10 +24,13 @@
 
 #include <map>
 #include <memory>
-#include <hb.h>
 
 #include "i_shaper.hpp"
 #include "shaper_shim.hpp"
+
+#ifdef ENABLE_HARFBUZZ
+
+#include <hb.h>
 
 namespace ff::shapers {
 
@@ -138,3 +141,5 @@ class HarfBuzzShaper : public IShaper {
 };
 
 }  // namespace ff::shapers
+
+#endif  // ENABLE_HARFBUZZ

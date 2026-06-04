@@ -55,7 +55,6 @@ extern Encoding *default_encoding, custom;
 extern int adjustwidth;
 extern int adjustlbearing;
 extern int autohint_before_generate;
-extern int separate_hint_controls;
 extern int no_windowing_ui;
 extern uint32_t default_background;
 extern int use_utf8_in_script;
@@ -67,19 +66,12 @@ extern int loaded_fonts_same_as_new;
 extern char *BDFFoundry, *TTFFoundry;
 extern char *xuid;
 
-extern int pagewidth, pageheight, printtype;	/* Printer defaults */
-extern char *printcommand, *printlazyprinter;
-
 extern Encoding *enclist;
 
 extern int quiet;
 
-#define SCRIPT_MENU_MAX	10
-
-
 extern MacFeat *default_mac_feature_map;
 
-extern int fontforge_main(int, char **);
 
 #ifdef __cplusplus
 }

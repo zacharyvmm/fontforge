@@ -1,4 +1,0 @@
-#Needs: fonts/merged.cff
-
-Open($1)
-Quit()

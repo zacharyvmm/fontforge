@@ -28,10 +28,9 @@
 #include <fontforge-config.h>
 
 #include "fvmetrics.h"
+#include "formatstubs.h"
 
 #include "bitmapchar.h"
-#include "bvedit.h"
-#include "cvundoes.h"
 #include "fontforgevw.h"
 #include "splineutil.h"
 #include "ustring.h"
@@ -61,7 +60,6 @@ return;
 	    width = sc->width * wd->scale/100;
 	sc->widthset = true;
 	if ( width!=sc->width ) {
-	    SCPreserveWidth(sc);
 	    SCSynchronizeWidth(sc,width,sc->width,fv);
 	}
     } else if ( wd->wtype == wt_lbearing ) {
@@ -116,7 +114,6 @@ return;
 		width = rint(scale * (bc->width-ib.maxx) * wd->scale/100 + ib.maxx*scale);
 	}
 	if ( width!=sc->width ) {
-	    SCPreserveWidth(sc);
 	    SCSynchronizeWidth(sc,width,sc->width,fv);
 	}
     } else if ( wd->wtype == wt_bearings ) {
@@ -156,7 +153,6 @@ return;
 	    width = rint(width*scale);
 	}
 	if ( width!=sc->width ) {
-	    SCPreserveWidth(sc);
 	    SCSynchronizeWidth(sc,width,sc->width,fv);
 	}
 	if ( transform[4]!=0 ) {
@@ -174,7 +170,6 @@ return;
 	else
 	    width = sc->vwidth * wd->scale/100;
 	if ( width!=sc->vwidth ) {
-	    SCPreserveVWidth(sc);
 	    sc->vwidth = width;
 	}
     }

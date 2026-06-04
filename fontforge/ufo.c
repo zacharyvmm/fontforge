@@ -47,10 +47,6 @@
 #include "ustring.h"
 #include "utype.h"
 
-#ifndef _NO_PYTHON
-# include "ffpython.h"
-#endif
-
 #include <locale.h>
 #include <math.h>
 #include <sys/stat.h>

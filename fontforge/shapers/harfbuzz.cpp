@@ -22,6 +22,8 @@
  */
 #include "harfbuzz.hpp"
 
+#ifdef ENABLE_HARFBUZZ
+
 #include <algorithm>
 #include <cassert>
 #include <iterator>
@@ -615,3 +617,5 @@ SplineChar* HarfBuzzShaper::get_notdef_glyph() {
 }
 
 }  // namespace ff::shapers
+
+#endif  // ENABLE_HARFBUZZ

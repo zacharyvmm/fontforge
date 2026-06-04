@@ -33,7 +33,6 @@
 #include "dumppfa.h"
 #include "fontforge.h"
 #include "fvfonts.h"
-#include "gwidget.h"
 #include "parsepfa.h"
 #include "psfont.h"
 #include "splinefont.h"

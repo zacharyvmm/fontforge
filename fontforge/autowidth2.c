@@ -29,7 +29,6 @@
 
 #include "autowidth2.h"
 
-#include "cvundoes.h"
 #include "edgelist2.h"
 #include "fontforgevw.h"
 #include "fvfonts.h"
@@ -197,7 +196,6 @@ static void aw2_figure_all_sidebearing(AW_Data *all) {
 	}
 	width = me->lsb + me->rsb + rint(me->bb.maxx - me->bb.minx);
 	if ( me->sc->width != width ) {
-	    SCPreserveWidth(me->sc);
 	    SCSynchronizeWidth(me->sc,width,me->sc->width,all->fv);
 	    changed = true;
 	}

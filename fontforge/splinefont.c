@@ -28,8 +28,8 @@
 #include <fontforge-config.h>
 
 #include "autohint.h"
-#include "autotrace.h"
 #include "dumppfa.h"
+#include "formatstubs.h"
 #include "encoding.h"
 #include "ffglib_compat.h"
 #include "ffprocess.h"
@@ -39,10 +39,7 @@
 #include "fvimportbdf.h"
 #include "gfile.h"
 #include "gutils.h"
-#include "ikarus.h"
-#include "macbinary.h"
 #include "namelist.h"
-#include "palmfonts.h"
 #include "parsepdf.h"
 #include "parsepfa.h"
 #include "parsettf.h"
@@ -56,7 +53,6 @@
 #include "unicoderange.h"
 #include "ustring.h"
 #include "utype.h"
-#include "winfonts.h"
 #include "woff.h"
 
 #include <locale.h>

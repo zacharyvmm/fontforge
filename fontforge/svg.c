@@ -30,8 +30,8 @@
 #include "svg.h"
 
 #include "autohint.h"
-#include "cvimages.h"
 #include "dumppfa.h"
+#include "formatstubs.h"
 #include "encoding.h"
 #include "ffglib_compat.h"
 #include "fontforgevw.h"
@@ -386,70 +386,8 @@ static int base64tab[] = {
     '0','1','2','3','4','5','6','7','8','9','+', '/'
 };
 
-static void DataURI_ImageDump(FILE *file,struct gimage *img) {
-    const char *mimetype=NULL;
-    FILE *imgf;
-    int done = false;
-    int threechars[3], fourchars[4], i, ch, ch_on_line;
-#if !defined( _NO_LIBJPEG)
-    struct _GImage *base = img->list_len==0 ? img->u.image : img->u.images[0];
-#endif
-
-    /* Technically we can only put a file into an URI if the whole thing is */
-    /*  less than 1024 bytes long. But I shall ignore that issue */
-    imgf = GFileTmpfile();
-#if !defined(_NO_LIBJPEG)
-    if ( base->image_type == it_true ) {
-	done = GImageWrite_Jpeg(img,imgf,78,false);
-	mimetype = "image/jpeg";
-    }
-#endif
-#ifndef _NO_LIBPNG
-    if ( !done ) {
-	done = GImageWrite_Png(img,imgf,false);
-	mimetype = "image/png";
-    }
-#endif
-    if ( !done ) {
-	GImageWrite_Bmp(img,imgf);
-	mimetype = "image/bmp";
-    }
-
-    fprintf( file,"%s;base64,", mimetype );
-    rewind(imgf);
-
-    /* Now do base64 output conversion */
-
-    rewind(imgf);
-    ch = getc(imgf);
-    ch_on_line = 0;
-    while ( ch!=EOF ) {
-	threechars[0] = threechars[1] = threechars[2] = 0;
-	for ( i=0; i<3 && ch!=EOF ; ++i ) {
-	    threechars[i] = ch;
-	    ch = getc(imgf);
-	}
-	if ( i>0 ) {
-	    fourchars[0] = base64tab[threechars[0]>>2];
-	    fourchars[1] = base64tab[((threechars[0]&0x3)<<4)|(threechars[1]>>4)];
-	    fourchars[2] = base64tab[((threechars[1]&0xf)<<2)|(threechars[2]>>6)];
-	    fourchars[3] = base64tab[threechars[2]&0x3f];
-	    if ( i<3 )
-		fourchars[3] = '=';
-	    if ( i<2 )
-		fourchars[2] = '=';
-	    putc(fourchars[0],file);
-	    putc(fourchars[1],file);
-	    putc(fourchars[2],file);
-	    putc(fourchars[3],file);
-	    ch_on_line += 4;
-	    if ( ch_on_line>=72 ) {
-		putc('\n',file);
-		ch_on_line = 0;
-	    }
-	}
-    }
-    fclose(imgf);
+static void DataURI_ImageDump(FILE *UNUSED(file), struct gimage *UNUSED(img)) {
+    /* GImage removed — image data: URI dump is dead code (no images populated). */
 }
 
 static void svg_dumpgradient(FILE *file,struct gradient *gradient,
@@ -643,18 +581,7 @@ static void svg_dumptype3(FILE *file,SplineChar *sc,const char *name,int istop) 
 		fprintf(file, "   </g>\n" );
 	    }
 	}
-	for ( images=sc->layers[i].images ; images!=NULL; images = images->next ) {
-	    struct _GImage *base;
-	    fprintf(file, "      <image\n" );
-	    base = images->image->list_len==0 ? images->image->u.image :
-		    images->image->u.images[0];
-	    fprintf(file, "\twidth=\"%g\"\n\theight=\"%g\"\n",
-		    (double) (base->width*images->xscale), (double) (base->height*images->yscale) );
-	    fprintf(file, "\tx=\"%g\"\n\ty=\"%g\"\n", (double) images->xoff, (double) images->yoff );
-	    fprintf(file, "\txlink:href=\"data:" );
-	    DataURI_ImageDump(file,images->image);
-	    fprintf(file, "\" />\n" );
-	}
+	/* GImage removed — image layers are dead code (never populated). Skip. */
     }
 }
 
@@ -2353,121 +2280,14 @@ static void DecodeBase64ToFile(FILE *tmp,char *str) {
     }
 }
 
-static GImage *GImageFromDataURI(char *uri) {
-    char *mimetype;
-    int is_base64=false, ch;
-    FILE *tmp;
-    GImage *img;
-
-    if ( uri==NULL )
-return( NULL );
-    if ( strncmp(uri,"data:",5)!=0 )
-return( NULL );
-    uri += 5;
-
-    mimetype = uri;
-    while ( *uri!=',' && *uri!=';' && *uri!='\0' ) ++uri;
-    if ( *uri=='\0' )
-return( NULL );
-    ch = *uri;
-    *uri='\0';
-    if ( ch==';' && strncmp(uri+1,"base64,",7)==0 ) {
-	is_base64=true;
-	uri += 6;
-	ch = ',';
-    } else if ( ch==';' )		/* Can't deal with other encoding methods */
-return( NULL );
-
-    ++uri;
-    if ( strcmp(mimetype,"image/png")==0 ||
-	    strcmp(mimetype,"image/jpeg")==0 ||
-	    strcmp(mimetype,"image/bmp")==0 )
-	/* These we support (if we've got the libraries) */;
-    else {
-	LogError(_("Unsupported mime type in data URI: %s"), mimetype );
-return( NULL );
-    }
-    tmp = GFileTmpfile();
-    if ( is_base64 )
-	DecodeBase64ToFile(tmp,uri);
-    else {
-	while ( *uri ) {
-	    putc(*uri,tmp);
-	    ++uri;
-	}
-    }
-    rewind(tmp);
-#ifndef _NO_LIBPNG
-    if ( strcmp(mimetype,"image/png")==0 )
-	img = GImageRead_Png(tmp);
-    else
-#endif
-#ifndef _NO_LIBJPEG
-    if ( strcmp(mimetype,"image/jpeg")==0 )
-	img = GImageRead_Jpeg(tmp);
-    else
-#endif
-    if ( strcmp(mimetype,"image/bmp")==0 )
-	img = GImageRead_Bmp(tmp);
-    else
-	img = NULL;
-    fclose(tmp);
-return( img );
+static GImage *GImageFromDataURI(char *UNUSED(uri)) {
+    /* GImage removed — images never populated. Always return NULL. */
+    return NULL;
 }
 
-static Entity *SVGParseImage(xmlNodePtr svg) {
-    double x=0,y=0,width=1,height=1;
-    GImage *img;
-    struct _GImage *base;
-    Entity *ent;
-    xmlChar *val;
-
-    val = xmlGetProp(svg,(xmlChar *) "x");
-    if ( val!=NULL ) {
-	x = strtod((char *) val,NULL);
-	free(val);
-    }
-    val = xmlGetProp(svg,(xmlChar *) "y");
-    if ( val!=NULL ) {
-	y = strtod((char *) val,NULL);
-	free(val);
-    }
-
-    val = xmlGetProp(svg,(xmlChar *) "width");
-    if ( val!=NULL ) {
-	width = strtod((char *) val,NULL);
-	free(val);
-    }
-    val = xmlGetProp(svg,(xmlChar *) "height");
-    if ( val!=NULL ) {
-	height = strtod((char *) val,NULL);
-	free(val);
-    }
-
-    val = xmlGetProp(svg,(xmlChar *) /*"xlink:href"*/ "href");
-    if ( val==NULL )
-return( NULL );
-    if ( strncmp((char *) val,"data:",5)!=0 ) {
-	LogError(_("FontForge only supports embedded images in data: URIs"));
-	free(val);
-return( NULL );		/* I can only handle data URIs */
-    }
-    img = GImageFromDataURI((char *) val);
-    free(val);
-    if ( img==NULL )
-return( NULL );
-    base = img->list_len==0 ? img->u.image : img->u.images[0];
-
-    ent = chunkalloc(sizeof(Entity));
-    ent->type = et_image;
-    ent->u.image.image = img;
-    ent->u.image.transform[1] = ent->u.image.transform[2] = 0;
-    ent->u.image.transform[0] = width/base->width;
-    ent->u.image.transform[3] = height/base->height;
-    ent->u.image.transform[4] = x;
-    ent->u.image.transform[5] = y;
-    ent->u.image.col = 0xffffffff;
-return( ent );
+static Entity *SVGParseImage(xmlNodePtr UNUSED(svg)) {
+    /* GImage removed — images never populated. Always return NULL. */
+    return NULL;
 }
 
 static Entity *EntityCreate(SplinePointList *head,struct svg_state *state) {

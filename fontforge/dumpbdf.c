@@ -30,9 +30,9 @@
 #include "dumpbdf.h"
 
 #include "bitmapchar.h"
-#include "bvedit.h"
 #include "encoding.h"
 #include "fontforge.h"
+#include "formatstubs.h"
 #include "splinefill.h"
 #include "splinefont.h"
 #include "splinesaveafm.h"

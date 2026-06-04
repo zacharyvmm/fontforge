@@ -113,7 +113,7 @@ typedef struct entlayer {
 
 typedef struct tile {
     Entity *tile;
-    struct tileinstance { real scale; struct gwindow *pixmap; struct tileinstance *next; }
+    struct tileinstance { real scale; void *pixmap; struct tileinstance *next; }
 	    *instances;
     char *name;
 } Tile;

@@ -30,7 +30,6 @@
 #include "splinestroke.h"
 
 #include "baseviews.h"
-#include "cvundoes.h"
 #include "fontforge.h"
 #include "splinefit.h"
 #include "splinefont.h"
@@ -2672,7 +2671,6 @@ void FVStrokeItScript(void *_fv, StrokeInfo *si,
 		!sc->ticked && fv->selected[i] ) {
 	    sc->ticked = true;
 	    if ( sc->parent->multilayer ) {
-		SCPreserveState(sc,false);
 		for ( layer = ly_fore; layer<sc->layer_cnt; ++layer ) {
 		    temp = SplineSetStroke(sc->layers[layer].splines,si,sc->layers[layer].order2);
 		    SplinePointListsFree( sc->layers[layer].splines );
@@ -2680,7 +2678,6 @@ void FVStrokeItScript(void *_fv, StrokeInfo *si,
 		}
 		SCCharChangedUpdate(sc,ly_all);
 	    } else {
-		SCPreserveLayer(sc,layer,false);
 		temp = SplineSetStroke(sc->layers[layer].splines,si,sc->layers[layer].order2);
 		SplinePointListsFree( sc->layers[layer].splines );
 		sc->layers[layer].splines = temp;
