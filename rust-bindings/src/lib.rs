@@ -7,9 +7,12 @@
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 pub mod bdf;
+pub mod glyphname;
 pub mod ot_layout;
 pub mod overlap;
 pub mod pstype1;
+pub mod spline_ops;
 pub mod svg;
 pub mod ufo;
 pub mod ufo_read;
+pub mod unicode;

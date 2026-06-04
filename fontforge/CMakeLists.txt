@@ -78,7 +78,6 @@ set(FONTFORGE_INST_HEADERS
   sfd1.h
   sflayoutP.h
   splinefont.h
-  stemdb.h
   ttf.h
   ttfinstrs.h
   uiinterface.h
@@ -146,7 +145,6 @@ add_library(fontforge
   splineutil.c
   splineutil2.c
   start.c
-  stemdb.c
   std_maps.cpp
   svg.c
   tottf.c

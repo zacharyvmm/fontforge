@@ -17,3 +17,5 @@
 #include "fvfonts.h"
 #include "lookups.h"
 #include "featurefile.h"
+#include "namelist.h"
+#include "utype.h"
