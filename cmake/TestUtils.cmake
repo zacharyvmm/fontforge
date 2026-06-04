@@ -63,8 +63,8 @@ function(_add_systest test_mode binary test_script)
 endfunction()
 
 function(add_ff_test test_script)
-  # Native scripting tests require fontforgeexe, not available in wheel builds
-  if(NOT BUILDING_WHEEL)
+  # Native scripting tests require fontforgeexe
+  if(TARGET fontforgeexe)
     _add_systest(ff "$<TARGET_FILE:fontforgeexe>" "${test_script}" ${ARGN})
   endif()
 endfunction()
@@ -76,8 +76,8 @@ function(add_py_test test_script)
     set(_disable_pyhook 1)
   endif()
 
-  # fontforgeexe-based Python tests not available in wheel builds
-  if(NOT BUILDING_WHEEL)
+  # fontforgeexe-based Python tests require fontforgeexe
+  if(TARGET fontforgeexe)
     _add_systest(py "$<TARGET_FILE:fontforgeexe>" "${test_script}" ${ARGN})
   endif()
   if(ENABLE_PYTHON_EXTENSION_RESULT AND NOT _disable_pyhook)
