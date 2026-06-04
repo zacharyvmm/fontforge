@@ -20,7 +20,6 @@ set(FONTFORGE_NOINST_HEADERS
   effects.h
   encoding.h
   featurefile.h
-  fontforgeui.h
   fvcomposite.h
   fvfonts.h
   fvimportbdf.h
@@ -112,7 +111,6 @@ set(FONTFORGE_INST_HEADERS
   ttfinstrs.h
   uiinterface.h
   unicoderange.h
-  views.h
 )
 
 add_library(fontforge

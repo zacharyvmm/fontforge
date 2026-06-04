@@ -146,25 +146,7 @@ struct freetype_raster {
     uint8_t *bitmap;
 };
 
-struct cvcontainer {
-    struct cvcontainer_funcs *funcs;
-};
 
-enum nav_type { nt_prevdef, nt_prev, nt_goto, nt_next, nt_nextdef };
-
-enum cv_container_type { cvc_searcher, cvc_mathkern, cvc_tilepath,
-			 cvc_gradient, cvc_multiplepattern, cvc_stroke };
-
-struct cvcontainer_funcs {
-    enum cv_container_type type;
-    void (*activateMe)(struct cvcontainer *cvc,struct charviewbase *cv);
-    void (*charEvent)(struct cvcontainer *cvc,void *event);
-    int (*canNavigate)(struct cvcontainer *cvc,enum nav_type type);
-    void (*doNavigate)(struct cvcontainer *cvc,enum nav_type type);
-    int (*canOpen)(struct cvcontainer *cvc);
-    void (*doClose)(struct cvcontainer *cvc);
-    SplineFont *(*sf_of_container)(struct cvcontainer *cvc);
-};
 
 typedef struct charviewbase {
     struct charviewbase *next;
@@ -174,24 +156,9 @@ typedef struct charviewbase {
     uint8_t drawmode;
     uint16_t ft_gridfitwidth;
     SplineSet *gridfit;
-    struct cvcontainer *container;		/* The sv (or whatever) within which this view is embedded (if it is embedded) */
 } CharViewBase;
 
-struct fvcontainer {
-    struct fvcontainer_funcs *funcs;
-};
 
-enum fv_container_type { fvc_kernformat, fvc_glyphset };
-
-struct fvcontainer_funcs {
-    enum fv_container_type type;
-    int is_modal;		/* If the fvc is in a modal dialog then we can't create modeless windows (like charviews, fontinfo, etc.) */
-    void (*activateMe)(struct fvcontainer *fvc,struct fontviewbase *fv);
-    void (*charEvent)(struct fvcontainer *fvc,void *event);
-    void (*doClose)(struct fvcontainer *fvc);		/* Cancel the containing dlg? */
-    void (*doResize)(struct fvcontainer *fvc,struct fontviewbase *fv,int width,int height);
-				/* Resize the container so that fv fits */
-};
 
 typedef struct fontviewbase {
     struct fontviewbase *next;		/* Next on list of open fontviews */
@@ -209,7 +176,6 @@ typedef struct fontviewbase {
 #ifndef _NO_PYTHON
     void *python_fv_object;
 #endif
-    struct fvcontainer *container;    
 } FontViewBase;
 
 enum origins { or_zero, or_center, or_lastpress, or_value, or_undefined };
@@ -464,8 +430,6 @@ extern void AutoKern2(SplineFont *sf, int layer,SplineChar **left,SplineChar **r
 	int chunk_height,
 	void (*addkp)(void *data,SplineChar *left,SplineChar *r,int off),
 	void *data);
-
-extern void MVSelectFirstKerningTable(struct metricsview *mv);
 
 extern float joinsnap;
 

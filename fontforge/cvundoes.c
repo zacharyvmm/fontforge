@@ -2498,17 +2498,7 @@ static void _PasteToSC(SplineChar *sc,Undoes *paster,FontViewBase *fv,int pastei
 	    SplineChar *rsc;
 	    double scale = PasteFigureScale(sc->parent,paster->copied_from);
 	    for ( refs = paster->u.state.refs; refs!=NULL; refs=refs->next ) {
-		if ( sc->views!=NULL && sc->views->container!=NULL ) {
-		    if ( sc->views->container->funcs->type == cvc_searcher ||
-			    sc->views->container->funcs->type == cvc_multiplepattern )
-			rsc = FindCharacter((sc->views->container->funcs->sf_of_container)(sc->views->container),
-				paster->copied_from,refs,NULL);
-		    else {
-			ff_post_error(_("Please don't do that"),_("You may not paste a reference into this window"));
-			rsc = (SplineChar *) -1;
-		    }
-		} else
-		    rsc = FindCharacter(sc->parent,paster->copied_from,refs,NULL);
+		rsc = FindCharacter(sc->parent,paster->copied_from,refs,NULL);
 		if ( rsc==(SplineChar *) -1 )
 		    /* Error above */;
 		else if ( rsc!=NULL && SCDependsOnSC(rsc,sc))
@@ -3054,7 +3044,7 @@ return;
 		new->next = cvsc->layers[ly].images;
 		cvsc->layers[ly].images = new;
 	    }
-	} else if ( paster->undotype==ut_statehint && cv->container==NULL &&
+	} else if ( paster->undotype==ut_statehint &&
 		!cv->layerheads[cv->drawmode]->background ) {
 	    ExtractHints(cvsc,paster->u.state.hints,true);
 	    if ( cv->layerheads[cv->drawmode]->order2 ) {
@@ -3076,17 +3066,11 @@ return;
 	    RefChar *new, *refs;
 	    SplineChar *sc;
 	    for ( refs = paster->u.state.refs; refs!=NULL; refs=refs->next ) {
-		if ( cv->container==NULL ) {
-		    sc = FindCharacter(cvsc->parent,paster->copied_from,refs,NULL);
-		    if ( sc!=NULL && SCDependsOnSC(sc,cvsc)) {
-			ff_post_error(_("Self-referential character"),_("Attempt to make a character that refers to itself"));
-			sc = (SplineChar *) -1;
-		    }
-		} else if ( cv->container->funcs->type == cvc_searcher ||
-			cv->container->funcs->type == cvc_multiplepattern )
-		    sc = FindCharacter((cv->container->funcs->sf_of_container)(cv->container),paster->copied_from,refs,NULL);
-		else
+		sc = FindCharacter(cvsc->parent,paster->copied_from,refs,NULL);
+		if ( sc!=NULL && SCDependsOnSC(sc,cvsc)) {
+		    ff_post_error(_("Self-referential character"),_("Attempt to make a character that refers to itself"));
 		    sc = (SplineChar *) -1;
+		}
 		if ( sc==(SplineChar *) -1 )
 		    /* Already complained */;
 		else if ( sc!=NULL ) {
