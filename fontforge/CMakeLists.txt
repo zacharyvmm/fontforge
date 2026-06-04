@@ -2,230 +2,228 @@
 
 set(FONTFORGE_NOINST_HEADERS
   asmfpst.h
-  autohint.h
+  hinting/autohint.h
   autosave.h
   autotrace.h
   autowidth.h
   autowidth2.h
   bitmapchar.h
   bitmapcontrol.h
-  bvedit.h
-  clipnoui.h
-  crctab.h
-  cvexport.h
-  cvimages.h
-  cvundoes.h
-  dumpbdf.h
-  dumppfa.h
-  effects.h
-  encoding.h
+  hinting/bvedit.h
+  core/clipnoui.h
+  core/crctab.h
+  formats/cvexport.h
+  math/cvimages.h
+  math/cvundoes.h
+  formats/dumpbdf.h
+  formats/dumppfa.h
+  math/effects.h
+  core/encoding.h
   featurefile.h
-  fontforgeui.h
-  fvcomposite.h
-  fvfonts.h
-  fvimportbdf.h
-  ikarus.h
+  math/fvcomposite.h
+  core/fvfonts.h
+  formats/fvimportbdf.h
+  formats/ikarus.h
   langfreq.h
-  macbinary.h
-  macenc.h
-  mathconstants.h
+  formats/macbinary.h
+  formats/macenc.h
+  math/mathconstants.h
   multidialog.h
-  namelist.h
-  othersubrs.h
-  palmfonts.h
-  parsepdf.h
-  parsepfa.h
-  parsettf.h
-  parsettfatt.h
-  parsettfbmf.h
-  parsettfvar.h
-  plugin.h
+  core/namelist.h
+  formats/othersubrs.h
+  formats/palmfonts.h
+  formats/parsepdf.h
+  formats/parsepfa.h
+  formats/parsettf.h
+  formats/parsettfatt.h
+  formats/parsettfbmf.h
+  formats/parsettfvar.h
+  core/plugin.h
   psread.h
   pua.h
   savefont.h
-  scstyles.h
-  sfd.h
-  spiro.h
-  splinefill.h
-  splinefit.h
-  splineorder2.h
-  splineoverlap.h
-  splinerefigure.h
+  math/scstyles.h
+  formats/sfd.h
+  math/spiro.h
+  math/splinefill.h
+  math/splinefit.h
+  math/splineorder2.h
+  math/splineoverlap.h
+  math/splinerefigure.h
   splinesave.h
   splinesaveafm.h
-  splinestroke.h
-  splineutil.h
-  splineutil2.h
-  start.h
-  std_maps.hpp
-  svg.h
-  tottf.h
-  tottfaat.h
-  tottfgpos.h
-  tottfvar.h
+  math/splinestroke.h
+  core/splineutil.h
+  core/splineutil2.h
+  core/start.h
+  scripting/std_maps.hpp
+  formats/svg.h
+  formats/tottf.h
+  formats/tottfaat.h
+  formats/tottfgpos.h
+  formats/tottfvar.h
   ttfspecial.h
-  utanvec.h
-  winfonts.h
-  woff.h
-  zapfnomen.h
+  math/utanvec.h
+  formats/winfonts.h
+  formats/woff.h
+  math/zapfnomen.h
 )
 
 set(FONTFORGE_INST_HEADERS
   autowidth.h
   autowidth2.h
-  baseviews.h
-  bezctx_ff.h
+  core/baseviews.h
+  math/bezctx_ff.h
   bitmapcontrol.h
-  delta.h
-  edgelist.h
-  edgelist2.h
-  encoding.h
-  fffreetype.h
-  ffpython.h
-  flaglist.h
-  fontforge.h
-  fontforgevw.h
-  fvmetrics.h
-  getline.h
-  glif_name_hash.h
+  core/delta.h
+  hinting/edgelist.h
+  hinting/edgelist2.h
+  core/encoding.h
+  hinting/fffreetype.h
+  scripting/ffpython.h
+  core/flaglist.h
+  core/fontforge.h
+  core/fontforgevw.h
+  math/fvmetrics.h
+  core/getline.h
+  core/glif_name_hash.h
   glyphcomp.h
-  groups.h
+  math/groups.h
   lookups.h
-  mem.h
+  core/mem.h
   mm.h
-  namehash.h
+  core/namehash.h
   nonlineartrans.h
-  ofl.h
-  PfEd.h
-  print.h
+  core/ofl.h
+  core/PfEd.h
+  core/print.h
   psfont.h
   savefont.h
-  scriptfuncs.h
-  scripting.h
-  sd.h
-  search.h
-  sfd1.h
-  sflayoutP.h
-  splinefont.h
-  stemdb.h
+  scripting/scriptfuncs.h
+  scripting/scripting.h
+  math/sd.h
+  math/search.h
+  formats/sfd1.h
+  math/sflayoutP.h
+  core/splinefont.h
+  hinting/stemdb.h
   ttf.h
-  ttfinstrs.h
-  uiinterface.h
+  hinting/ttfinstrs.h
+  core/uiinterface.h
   unicoderange.h
-  views.h
 )
 
 add_library(fontforge
   ${FONTFORGE_NOINST_HEADERS}
   ${FONTFORGE_INST_HEADERS}
-  activeinui.c
-  ffglib_compat.cpp
+  core/activeinui.c
+  scripting/ffglib_compat.cpp
   asmfpst.c
-  autohint.c
+  hinting/autohint.c
   autosave.c
   autotrace.c
   autowidth.c
   autowidth2.c
-  bezctx_ff.c
+  math/bezctx_ff.c
   bitmapchar.c
   bitmapcontrol.c
-  bvedit.c
-  clipnoui.c
-  crctab.cpp
-  cvexport.c
-  cvimages.c
-  cvundoes.c
-  dumpbdf.c
-  dumppfa.c
-  effects.c
-  encoding.c
+  hinting/bvedit.c
+  core/clipnoui.c
+  core/crctab.cpp
+  formats/cvexport.c
+  math/cvimages.c
+  math/cvundoes.c
+  formats/dumpbdf.c
+  formats/dumppfa.c
+  math/effects.c
+  core/encoding.c
   featurefile.c
-  ffprocess.c
-  flaglist.c
-  fontviewbase.c
+  scripting/ffprocess.c
+  core/flaglist.c
+  core/fontviewbase.c
   freetype.c
-  ftdelta.c
-  fvcomposite.c
-  fvfonts.c
-  fvimportbdf.c
-  fvmetrics.c
-  getline.c
-  glif_name_hash.cpp
+  math/ftdelta.c
+  math/fvcomposite.c
+  core/fvfonts.c
+  formats/fvimportbdf.c
+  math/fvmetrics.c
+  core/getline.c
+  core/glif_name_hash.cpp
   glyphcomp.c
-  groups.c
-  ikarus.c
+  math/groups.c
+  formats/ikarus.c
   langfreq.c
   lookups.c
-  macbinary.c
-  macenc.c
-  mathconstants.c
-  mem.c
+  formats/macbinary.c
+  formats/macenc.c
+  math/mathconstants.c
+  core/mem.c
   mm.c
-  namelist.c
+  core/namelist.c
   nonlineartrans.c
   noprefs.c
-  nouiutil.c
-  nowakowskittfinstr.c
-  ofl.c
-  othersubrs.c
-  palmfonts.c
-  parsepdf.c
-  parsepfa.c
-  parsettf.c
-  parsettfatt.c
-  parsettfbmf.c
-  parsettfvar.c
-  plugin.cpp
-  print.cpp
+  core/nouiutil.c
+  hinting/nowakowskittfinstr.c
+  core/ofl.c
+  formats/othersubrs.c
+  formats/palmfonts.c
+  formats/parsepdf.c
+  formats/parsepfa.c
+  formats/parsettf.c
+  formats/parsettfatt.c
+  formats/parsettfbmf.c
+  formats/parsettfvar.c
+  core/plugin.cpp
+  core/print.cpp
   psread.c
   pua.c
-  python.cpp
+  scripting/python.cpp
   savefont.c
-  scripting.cpp
-  scstyles.c
-  search.c
-  sfd.cpp
-  sfd1.c
-  sflayout.cpp
-  spiro.c
-  splinechar.c
-  splinefill.c
-  splinefit.c
-  splinefont.c
-  splineorder2.c
-  splineoverlap.c
-  splinerefigure.c
+  scripting/scripting.cpp
+  math/scstyles.c
+  math/search.c
+  formats/sfd.cpp
+  formats/sfd1.c
+  math/sflayout.cpp
+  math/spiro.c
+  core/splinechar.c
+  math/splinefill.c
+  math/splinefit.c
+  core/splinefont.c
+  math/splineorder2.c
+  math/splineoverlap.c
+  math/splinerefigure.c
   splinesave.c
   splinesaveafm.c
-  splinestroke.c
-  splineutil.c
-  splineutil2.c
-  start.c
-  stemdb.c
-  std_maps.cpp
-  svg.c
-  tottf.c
-  tottfaat.c
-  tottfgpos.c
-  tottfvar.c
-  ttfinstrs.c
+  math/splinestroke.c
+  core/splineutil.c
+  core/splineutil2.c
+  core/start.c
+  hinting/stemdb.c
+  scripting/std_maps.cpp
+  formats/svg.c
+  formats/tottf.c
+  formats/tottfaat.c
+  formats/tottfgpos.c
+  formats/tottfvar.c
+  hinting/ttfinstrs.c
   ttfspecial.c
-  ufo.c
+  formats/ufo.c
   unicoderange.c
-  utanvec.c
-  winfonts.c
-  woff.c
-  zapfnomen.c
+  math/utanvec.c
+  formats/winfonts.c
+  formats/woff.c
+  math/zapfnomen.c
 )
 
 add_subdirectory(shapers)
 
 if(ENABLE_WOFF2_RESULT)
-  target_sources(fontforge PRIVATE woff2.cc)
+  target_sources(fontforge PRIVATE formats/woff2.cc)
 endif()
 
 # Turn up warnings on a few source files
-set_property(SOURCE splineoverlap.c APPEND PROPERTY COMPILE_OPTIONS ${FONTFORGE_EXTRA_CFLAGS})
+set_property(SOURCE math/splineoverlap.c APPEND PROPERTY COMPILE_OPTIONS ${FONTFORGE_EXTRA_CFLAGS})
 
 set_property(TARGET fontforge PROPERTY VERSION 4)
 if(BUILD_SHARED_LIBS)
@@ -240,7 +238,15 @@ if(BUILD_SHARED_LIBS)
 endif()
 
 # This is pretty bad...
-target_include_directories(fontforge PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(fontforge
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/formats
+    ${CMAKE_CURRENT_SOURCE_DIR}/math
+    ${CMAKE_CURRENT_SOURCE_DIR}/hinting
+    ${CMAKE_CURRENT_SOURCE_DIR}/scripting
+)
 
 # Export all symbols from the DLL on Windows (mimics MinGW's --export-all-symbols)
 set_target_properties(fontforge PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)

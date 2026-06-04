@@ -39,8 +39,8 @@ add_custom_target(check
   USES_TERMINAL
 )
 
-# fontforgeexe is only available when not building a wheel
-if(NOT BUILDING_WHEEL)
+# fontforgeexe is only available when not building a wheel and target exists
+if(TARGET fontforgeexe)
   add_dependencies(check fontforgeexe)
 endif()
 
